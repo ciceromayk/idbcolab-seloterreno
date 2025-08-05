@@ -1,12 +1,11 @@
 import streamlit as st
+import textwrap
 from db import SessionLocal, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 import pandas as pd
-import textwrap
 
-
-# >>>>>>> ADICIONE ESTA LINHA PARA MODO LARGO <<<<<<<
+# Layout largo
 st.set_page_config(layout="wide")
 
 # -------- CSS NOVO para os cards finais do resumo --------
@@ -173,7 +172,6 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # == CRITÉRIOS COMERCIAIS, ordem trocada ==
     with st.expander("CRITÉRIOS COMERCIAIS (50%)", expanded=False):
         st.markdown(
             "<h4 style='font-weight:bold; text-align:center;'>Critérios Comerciais</h4>",
@@ -225,10 +223,8 @@ if st.session_state['pagina'] == 'novo':
         finally:
             session.close()
 
-        # --------- RESUMO VISUAL FINAL MELHORADO -------------
-        st.markdown("---")
-        st.subheader("RESUMO DA AVALIAÇÃO")
-
+        # RESOLVENDO RENDER HTML: STRING SEM INDENTAÇÃO, SEM QUEBRAS 
+        # E USANDO unsafe_allow_html=True
         texto_selo = definir_selo(total)
         if "(" in texto_selo:
             letra, _ = texto_selo.split(" ",1)
@@ -237,54 +233,46 @@ if st.session_state['pagina'] == 'novo':
 
         perc = min(int(float(total)/100*100), 100)
 
-        resumo_html = textwrap.dedent(f"""
-<div class="resumo-avaliacao-box">
-  <div class="resumo-grid">
-
-    <div class="resumo-col">
-      <span class="icon">⚖️</span>
-      <h4>JURÍDICO</h4>
-      <div class="valor-card">{juridico_total}%</div>
-      <div class="valor-pequeno">até 20%</div>
-    </div>
-
-    <div class="resumo-col">
-      <span class="icon">🏗️</span>
-      <h4>FÍSICO</h4>
-      <div class="valor-card">{fisico_total}%</div>
-      <div class="valor-pequeno">até 30%</div>
-    </div>
-
-    <div class="resumo-col">
-      <span class="icon">🛒</span>
-      <h4>COMERCIAL</h4>
-      <div class="valor-card">{comercial_total}%</div>
-      <div class="valor-pequeno">até 50%</div>
-    </div>
-
-    <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
-      <span class="icon">🏆</span>
-      <h4 style="color:#15388a">Pontuação SQI</h4>
-      <div class="valor-card sqi">{total}%</div>
-      <div class="selo-categoria">SQI CATEGORIA {letra}</div>
-      <div class="selo-label"></div>
-    </div>
-
-  </div>
-  <div class="progress-bar-bg">
-    <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
-  </div>
-  <div class="classificacao-legenda">
-    <span>E (Ruim)</span>
-    <span>D (Regular)</span>
-    <span>C (Médio)</span>
-    <span>B (Bom)</span>
-    <span>A (Excelente)</span>
-  </div>
+        resumo_html = f"""<div class="resumo-avaliacao-box">
+<div class="resumo-grid">
+<div class="resumo-col">
+<span class="icon">⚖️</span>
+<h4>JURÍDICO</h4>
+<div class="valor-card">{juridico_total}%</div>
+<div class="valor-pequeno">até 20%</div>
 </div>
-""")
-        
-        # >>>>>>> ESTE É O COMANDO CORRETO! <<<<<<<
+<div class="resumo-col">
+<span class="icon">🏗️</span>
+<h4>FÍSICO</h4>
+<div class="valor-card">{fisico_total}%</div>
+<div class="valor-pequeno">até 30%</div>
+</div>
+<div class="resumo-col">
+<span class="icon">🛒</span>
+<h4>COMERCIAL</h4>
+<div class="valor-card">{comercial_total}%</div>
+<div class="valor-pequeno">até 50%</div>
+</div>
+<div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+<span class="icon">🏆</span>
+<h4 style="color:#15388a">Pontuação SQI</h4>
+<div class="valor-card sqi">{total}%</div>
+<div class="selo-categoria">SQI CATEGORIA {letra}</div>
+<div class="selo-label"></div>
+</div>
+</div>
+<div class="progress-bar-bg">
+<div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+</div>
+<div class="classificacao-legenda">
+<span>E (Ruim)</span>
+<span>D (Regular)</span>
+<span>C (Médio)</span>
+<span>B (Bom)</span>
+<span>A (Excelente)</span>
+</div>
+</div>"""
+
         st.markdown(resumo_html, unsafe_allow_html=True)
 
 # ==================== HISTÓRICO ==========================
