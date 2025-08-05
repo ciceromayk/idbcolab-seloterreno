@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Float
 from datetime import datetime
 
 # Criação da base declarativa
@@ -24,3 +24,13 @@ class Terreno(Base):
     score = Column(Integer)
     selo = Column(String, index=True)
     data_avaliacao = Column(DateTime, default=datetime.utcnow)
+    
+    # Novos campos adicionados
+    descricao_terreno = Column(String)
+    endereco = Column(String)
+    area_terreno = Column(Float)  # Usando Float para permitir números decimais
+    altura_maxima = Column(Float)
+    lençol_freatico_perm = Column(String)
+    nivel_lençol = Column(Float, nullable=True)
+    permite_outorga = Column(String)
+    responsavel_avaliacao = Column(String)
