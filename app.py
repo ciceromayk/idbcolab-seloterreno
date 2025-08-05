@@ -28,6 +28,27 @@ if opcao == "Novo Terreno":
     st.title("Cadastro e Avaliação de Terreno")
     st.write("Preencha os dados do terreno conforme os critérios abaixo:")
 
+    # Macro item: DADOS DO TERRENO
+    with st.expander("DADOS DO TERRENO", expanded=True):
+        st.markdown("<p style='font-weight: bold;'>Descrição do Terreno</p>", unsafe_allow_html=True)
+        descricao_terreno = st.text_area("Descrição do terreno", max_chars=500, key="descricao_terreno").upper()
+        endereco = st.text_input("Endereço", key="endereco")
+        area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
+        altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
+        
+        # Lençol freático
+        lençol_freatico_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lençol_freatico_perm")
+        if lençol_freatico_perm == "Não":
+            nivel_lençol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lençol")
+        else:
+            nivel_lençol = None
+
+        # Outorga
+        permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
+
+        # Responsável pela avaliação
+        responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
+
     # Critérios Jurídicos (20%) - colapsável
     with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=True):
         st.markdown("<p style='font-weight: bold;'>Critérios Jurídicos</p>", unsafe_allow_html=True)
@@ -78,7 +99,7 @@ if opcao == "Novo Terreno":
                 doc_regular, ausencia_onus, potencial_aprovacao,
                 area_dimensoes, topografia, infraestrutura, zoneamento,
                 localizacao, estimativa_vgv, demanda_concorrencia,
-                adequacao_produto_alt  # usando valor do subitem
+                adequacao_produto_alt
             )
             selo = definir_selo(total)
 
