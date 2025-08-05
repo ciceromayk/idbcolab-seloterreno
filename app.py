@@ -183,7 +183,7 @@ if st.session_state['pagina'] == 'novo':
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
             adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
 
-    if st.button("Avaliar Terreno"):
+if st.button("Avaliar Terreno"):
     # Cálculo dos scores
     juridico_total  = doc_regular + ausencia_onus + potencial_aprovacao
     fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
@@ -222,7 +222,7 @@ if st.session_state['pagina'] == 'novo':
     finally:
         session.close()
 
-    # Texto correto do selo, sempre "SELO A", "SELO B", ...
+# Texto correto do selo, sempre "SELO A", "SELO B", ...
     texto_selo = definir_selo(total)        # Retorna, por exemplo, "A (Excelente)" ou "B (Bom)" ou "C"
     letra_selo = texto_selo[0]              # Sempre pega só 'A', 'B', ...
     selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
