@@ -8,7 +8,6 @@ import pandas as pd
 # Layout largo
 st.set_page_config(layout="wide")
 
-# -------- CSS NOVO para os cards finais do resumo --------
 css_estilo = """
 <style>
 .resumo-avaliacao-box {
@@ -148,7 +147,7 @@ if st.session_state['pagina'] == 'novo':
         if lencol_perm == "Não":
             nivel_lencol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lencol")
         else:
-            nivel_lencol = None
+            nivel_lencol = 0.0  # CORRIGIDO: garante nunca ser None.
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
@@ -190,19 +189,39 @@ if st.session_state['pagina'] == 'novo':
         fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
         comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
         total = juridico_total + fisico_total + comercial_total
-        selo = definir_selo(total)
+        selo = definir_selo(total) # deve retornar 'B (Bom)' ou 'B'
 
         session = SessionLocal()
         try:
             novo_terreno = Terreno(
-                # ... seus campos ...
+                descricao_terreno=descricao_terreno,
+                endereco=endereco,
+                bairro=bairro,
+                area_terreno=area_terreno,
+                altura_maxima=altura_maxima,
+                lencol_freatico_perm=lencol_perm,
+                nivel_lencol=nivel_lencol,
+                permite_outorga=permite_outorga,
+                responsavel_avaliacao=responsavel_avaliacao,
+                doc_regular=doc_regular,
+                ausencia_onus=ausencia_onus,
+                potencial_aprovacao=potencial_aprovacao,
+                area_dimensoes=area_dimensoes,
+                topografia=topografia,
+                infraestrutura=infraestrutura,
+                zoneamento=zoneamento,
+                localizacao=localizacao,
+                estimativa_vgv=estimativa_vgv,
+                demanda_concorrencia=demanda_concorrencia,
+                adequacao_produto=adequacao_produto,
+                score=total,
+                selo=selo
             )
             session.add(novo_terreno)
             session.commit()
         finally:
             session.close()
 
-        # Tudo isso deve estar DENTRO do if!
         texto_selo = definir_selo(total)
         if "(" in texto_selo:
             letra, _ = texto_selo.split(" ",1)
