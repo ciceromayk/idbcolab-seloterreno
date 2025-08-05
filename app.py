@@ -222,7 +222,7 @@ if st.session_state['pagina'] == 'novo':
             session.close()
 
         texto_selo = definir_selo(total)
-        letra_selo = {texto_selo} # Certo: só "A", "B"...
+        letra_selo = texto_selo[5]  # Certo: só "A", "B"... # Certo: só "A", "B"...
         selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
         titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
         perc = min(int(float(total)), 100)
