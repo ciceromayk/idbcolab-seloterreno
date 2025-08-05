@@ -184,93 +184,93 @@ if st.session_state['pagina'] == 'novo':
             adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
 
     if st.button("Avaliar Terreno"):
-        # Cálculo dos scores
-        juridico_total  = doc_regular + ausencia_onus + potencial_aprovacao
-        fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
-        comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
-        total = juridico_total + fisico_total + comercial_total
-        selo = definir_selo(total) # deve retornar 'B (Bom)' ou 'B'
+    # Cálculo dos scores
+    juridico_total  = doc_regular + ausencia_onus + potencial_aprovacao
+    fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
+    comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
+    total = juridico_total + fisico_total + comercial_total
+    selo = definir_selo(total) # Exemplo de retorno: 'B (Bom)' ou 'A'
 
-        session = SessionLocal()
-        try:
-            novo_terreno = Terreno(
-                descricao_terreno=descricao_terreno,
-                endereco=endereco,
-                bairro=bairro,
-                area_terreno=area_terreno,
-                altura_maxima=altura_maxima,
-                lencol_freatico_perm=lencol_perm,
-                nivel_lencol=nivel_lencol,
-                permite_outorga=permite_outorga,
-                responsavel_avaliacao=responsavel_avaliacao,
-                doc_regular=doc_regular,
-                ausencia_onus=ausencia_onus,
-                potencial_aprovacao=potencial_aprovacao,
-                area_dimensoes=area_dimensoes,
-                topografia=topografia,
-                infraestrutura=infraestrutura,
-                zoneamento=zoneamento,
-                localizacao=localizacao,
-                estimativa_vgv=estimativa_vgv,
-                demanda_concorrencia=demanda_concorrencia,
-                adequacao_produto=adequacao_produto,
-                score=total,
-                selo=selo
-            )
-            session.add(novo_terreno)
-            session.commit()
-        finally:
-            session.close()
+    session = SessionLocal()
+    try:
+        novo_terreno = Terreno(
+            descricao_terreno=descricao_terreno,
+            endereco=endereco,
+            bairro=bairro,
+            area_terreno=area_terreno,
+            altura_maxima=altura_maxima,
+            lencol_freatico_perm=lencol_perm,
+            nivel_lencol=nivel_lencol,
+            permite_outorga=permite_outorga,
+            responsavel_avaliacao=responsavel_avaliacao,
+            doc_regular=doc_regular,
+            ausencia_onus=ausencia_onus,
+            potencial_aprovacao=potencial_aprovacao,
+            area_dimensoes=area_dimensoes,
+            topografia=topografia,
+            infraestrutura=infraestrutura,
+            zoneamento=zoneamento,
+            localizacao=localizacao,
+            estimativa_vgv=estimativa_vgv,
+            demanda_concorrencia=demanda_concorrencia,
+            adequacao_produto=adequacao_produto,
+            score=total,
+            selo=selo
+        )
+        session.add(novo_terreno)
+        session.commit()
+    finally:
+        session.close()
 
-        # ... resto do código (commit no banco etc) ...
-texto_selo = definir_selo(total)
-letra_selo = texto_selo[0]  # Usa somente A, B, C, D...
-selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
-titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
-perc = min(int(float(total)/100*100), 100)
+    # Texto correto do selo, sempre "SELO A", "SELO B", ...
+    texto_selo = definir_selo(total)        # Retorna, por exemplo, "A (Excelente)" ou "B (Bom)" ou "C"
+    letra_selo = texto_selo[0]              # Sempre pega só 'A', 'B', ...
+    selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
 
-resumo_html = f"""{titulo_html}
+    titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
+    perc = min(int(float(total)), 100)
+
+    resumo_html = f"""{titulo_html}
 <div class="resumo-avaliacao-box">
-<div class="resumo-grid">
-<div class="resumo-col">
-<span class="icon">⚖️</span>
-<h4>JURÍDICO</h4>
-<div class="valor-card">{juridico_total}%</div>
-<div class="valor-pequeno">até 20%</div>
+    <div class="resumo-grid">
+        <div class="resumo-col">
+            <span class="icon">⚖️</span>
+            <h4>JURÍDICO</h4>
+            <div class="valor-card">{juridico_total}%</div>
+            <div class="valor-pequeno">até 20%</div>
+        </div>
+        <div class="resumo-col">
+            <span class="icon">🏗️</span>
+            <h4>FÍSICO</h4>
+            <div class="valor-card">{fisico_total}%</div>
+            <div class="valor-pequeno">até 30%</div>
+        </div>
+        <div class="resumo-col">
+            <span class="icon">💰</span>
+            <h4>COMERCIAL</h4>
+            <div class="valor-card">{comercial_total}%</div>
+            <div class="valor-pequeno">até 50%</div>
+        </div>
+        <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+            <span class="icon">🏆</span>
+            <h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
+            <div class="valor-card sqi">{total}%</div>
+            {selo_html}
+            <div class="selo-label"></div>
+        </div>
+    </div>
+    <div class="progress-bar-bg" style="margin-bottom:2px;">
+        <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+    </div>
+    <div class="classificacao-legenda" style="margin-top:6px;">
+        <span>D (Regular)</span>
+        <span>C (Médio)</span>
+        <span>B (Bom)</span>
+        <span>A (Excelente)</span>
+    </div>
 </div>
-<div class="resumo-col">
-<span class="icon">🏗️</span>
-<h4>FÍSICO</h4>
-<div class="valor-card">{fisico_total}%</div>
-<div class="valor-pequeno">até 30%</div>
-</div>
-<div class="resumo-col">
-<span class="icon">💰</span>
-<h4>COMERCIAL</h4>
-<div class="valor-card">{comercial_total}%</div>
-<div class="valor-pequeno">até 50%</div>
-</div>
-<div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
-<span class="icon">🏆</span>
-<h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
-<div class="valor-card sqi">{total}%</div>
-{selo_html}
-<div class="selo-label"></div>
-</div>
-</div>
-<div class="progress-bar-bg" style="margin-bottom:2px;">
-<div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
-</div>
-<div class="classificacao-legenda" style="margin-top:6px;">
-<span>D (Regular)</span>
-<span>C (Médio)</span>
-<span>B (Bom)</span>
-<span>A (Excelente)</span>
-</div>
-</div>"""
-
-st.markdown(resumo_html, unsafe_allow_html=True)
-
+"""
+    st.markdown(resumo_html, unsafe_allow_html=True)
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
