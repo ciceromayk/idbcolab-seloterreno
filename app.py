@@ -1,14 +1,12 @@
 import streamlit as st
-import textwrap
+import pandas as pd
 from db import SessionLocal, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
-import pandas as pd
 
-# Layout largo
 st.set_page_config(layout="wide")
 
-css_estilo = """
+css_personalizado = """
 <style>
 .resumo-avaliacao-box {
     background: linear-gradient(100deg, #f8fafc 80%, #e9e0fa 100%);
@@ -102,9 +100,13 @@ css_estilo = """
     .resumo-avaliacao-box{padding:10px 4px;}
     .resumo-grid{ grid-template-columns: 1fr; gap:16px;}
 }
+.streamlit-expanderHeader {
+    font-size: 1.375rem !important;
+    font-weight: bold !important;
+}
 </style>
 """
-st.markdown(css_estilo, unsafe_allow_html=True)
+st.markdown(css_personalizado, unsafe_allow_html=True)
 
 # Sidebar, menu, manutenção do banco
 st.sidebar.image(
@@ -141,54 +143,63 @@ if st.session_state['pagina'] == 'novo':
         descricao_terreno = st.text_input("Nome do terreno", max_chars=100, key="descricao_terreno").upper()
         endereco = st.text_input("Endereço", key="endereco")
         bairro = st.text_input("Bairro", key="bairro")
-        area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
-        altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
+        col_area, col_altura = st.columns(2)
+        with col_area:
+            area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
+        with col_altura:
+            altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
         lencol_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lencol_perm")
         if lencol_perm == "Não":
             nivel_lencol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lencol")
         else:
-            nivel_lencol = 0.0  # Corrigido para nunca ser None
+            nivel_lencol = 0.0
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
     with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=False):
-        st.markdown("<p style='font-weight: bold;'>Critérios Jurídicos</p>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1:
-            doc_regular = st.slider("Documentação Regular (0 a 5)", 0, 5, 3)
+            st.markdown("Documentação Regular (0 a 5):")
+            doc_regular = st.slider("", 0, 5, 3, key="doc_regular")
         with col2:
-            ausencia_onus = st.slider("Ausência de Ônus (0 a 5)", 0, 5, 3)
+            st.markdown("Ausência de Ônus (0 a 5):")
+            ausencia_onus = st.slider("", 0, 5, 3, key="ausencia_onus")
         with col3:
-            potencial_aprovacao = st.slider("Potencial de Aprovação (0 a 10)", 0, 10, 6)
+            st.markdown("Potencial de Aprovação (0 a 10):")
+            potencial_aprovacao = st.slider("", 0, 10, 6, key="potencial_aprovacao")
 
     with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=False):
-        st.markdown("<p style='font-weight: bold;'>Critérios Físicos</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            area_dimensoes = st.slider("Área e Dimensões (0 a 10)", 0, 10, 7)
-            topografia = st.slider("Topografia (0 a 5)", 0, 5, 3)
+            st.markdown("Área e Dimensões (0 a 10):")
+            area_dimensoes = st.slider("", 0, 10, 7, key="area_dimensoes")
+            st.markdown("Topografia (0 a 5):")
+            topografia = st.slider("", 0, 5, 3, key="topografia")
         with col2:
-            infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
-            zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
+            st.markdown("Infraestrutura Existente (0 a 5):")
+            infraestrutura = st.slider("", 0, 5, 3, key="infraestrutura")
+            st.markdown("Zoneamento (0 a 10):")
+            zoneamento = st.slider("", 0, 10, 7, key="zoneamento")
 
     with st.expander("CRITÉRIOS COMERCIAIS (50%)", expanded=False):
-        st.markdown(
-            "<h4 style='font-weight:bold; text-align:center;'>Critérios Comerciais</h4>",
-            unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            localizacao = st.slider("Localização (0 a 15)", 0, 15, 10)
-            estimativa_vgv = st.slider("Estimativa de VGV (0 a 15)", 0, 15, 10)
+            st.markdown("Localização (0 a 15):")
+            localizacao = st.slider("", 0, 15, 10, key="localizacao")
+            st.markdown("Estimativa de VGV (0 a 15):")
+            estimativa_vgv = st.slider("", 0, 15, 10, key="estimativa_vgv")
         with col2:
-            demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
-            adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
+            st.markdown("Demanda e Concorrência (0 a 10):")
+            demanda_concorrencia = st.slider("", 0, 10, 5, key="demanda_concorrencia")
+            st.markdown("Adequação do Produto (0 a 10):")
+            adequacao_produto = st.slider("", 0, 10, 7, key="adequacao_produto")
 
     if st.button("Avaliar Terreno"):
         juridico_total  = doc_regular + ausencia_onus + potencial_aprovacao
         fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
         comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
         total = juridico_total + fisico_total + comercial_total
-        selo = definir_selo(total)  # Deve retornar algo tipo "A (Excelente)" ou só "A"
+        selo = definir_selo(total)  # Retorna "A (Excelente)" ou só "A"
 
         session = SessionLocal()
         try:
@@ -222,7 +233,7 @@ if st.session_state['pagina'] == 'novo':
             session.close()
 
         texto_selo = definir_selo(total)
-        letra_selo = texto_selo[4]  # Certo: só "A", "B"... # Certo: só "A", "B"...
+        letra_selo = texto_selo[4]  # Certo: só "A", "B"...
         selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
         titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
         perc = min(int(float(total)), 100)
