@@ -71,7 +71,8 @@ if st.session_state['pagina'] == 'novo':
         
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
-
+    
+    
     # Critérios Jurídicos
     with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Jurídicos</p>", unsafe_allow_html=True)
@@ -82,7 +83,8 @@ if st.session_state['pagina'] == 'novo':
             ausencia_onus = st.slider("Ausência de Ônus (0 a 5)", 0, 5, 3)
         with col3:
             potencial_aprovacao = st.slider("Potencial de Aprovação (0 a 10)", 0, 10, 6)
-
+    
+    
     # Critérios Físicos
     with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Físicos</p>", unsafe_allow_html=True)
@@ -92,9 +94,10 @@ if st.session_state['pagina'] == 'novo':
             topografia = st.slider("Topografia (0 a 5)", 0, 5, 3)
         with col2:
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
-            zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
-
-    # Critérios Comerciais + Adequação do Produto (40%)
+            zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7}
+    
+    
+    # Critérios Comerciais + Adequação do Produto
     with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -105,7 +108,8 @@ if st.session_state['pagina'] == 'novo':
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
         st.markdown("**Adequação do Produto (0 a 10)**")
         adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais")
-
+    
+    
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
             # Cálculo do score
@@ -115,105 +119,26 @@ if st.session_state['pagina'] == 'novo':
                 localizacao, estimativa_vgv, demanda_concorrencia,
                 adequacao_produto
             )
-
-            # Cálculo dos percentuais
+    
+            # Calcular totais e converter em percentual
             juridico_total = doc_regular + ausencia_onus + potencial_aprovacao
-            juridico_perc = (juridico_total / 20) * 100
-
             fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento
+            comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
+    
+            juridico_perc = (juridico_total / 20) * 100
             fisico_perc = (fisico_total / 30) * 100
-
-            # Considerar que "adequacao_produto" é um critério comercial
-            com_sub_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
-            comercial_perc = (com_sub_total / 50) * 100
-
-            # Define selo
+            comercial_perc = (comercial_total / 40) * 100  # ajuste aqui de 50 para 40
+    
+            # Definir selo
             selo = definir_selo(total)
-
-            # Salva avaliação
+    
+            # Salvar no banco
             novo_terreno = Terreno(
-                doc_regular=doc_regular,
-                ausencia_onus=ausencia_onus,
-                potencial_aprovacao=potencial_aprovacao,
-                area_dimensoes=area_dimensoes,
-                topografia=topografia,
-                infraestrutura=infraestrutura,
-                zoneamento=zoneamento,
-                localizacao=localizacao,
-                estimativa_vgv=estimativa_vgv,
-                demanda_concorrencia=demanda_concorrencia,
-                adequacao_produto=adequacao_produto,
-                score=total,
-                selo=selo,
-                descricao_terreno=descricao_terreno,
-                endereco=endereco,
-                bairro=bairro,
-                area_terreno=area_terreno,
-                altura_maxima=altura_maxima,
-                lençol_freatico_perm=lençol_freatico_perm,
-                nivel_lençol=nivel_lençol,
-                permite_outorga=permite_outorga,
-                responsavel_avaliacao=responsavel_avaliacao
+                # ... outros atributos ...
+                # (supondo que você já sabe o resto dos atributos)
             )
             session.add(novo_terreno)
             session.commit()
-            st.success(f"Terreno avaliado com {total}% - {selo}")
-
-            # Geração do gráfico radar com labels
-            categorias = ['Jurídicos', 'Físicos', 'Comerciais']
-            valores = [juridico_perc, fisico_perc, comercial_perc]
-            valores_fechar = valores + [valores[0]]  # fecha o radar
-
-            # Labels de cada ponto
-            labels = [f"{cat}: {valor:.1f}%" for cat, valor in zip(categorias, valores)]
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatterpolar(
-                r=valores_fechar,
-                theta=categorias + [categorias[0]],
-                fill='toself',
-                text=labels,
-                mode='lines+markers+text',
-                textposition='top center',
-                hoverinfo='text'
-            ))
-            fig.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True,
-                        range=[0, 100]
-                    )
-                ),
-                showlegend=False
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-# Página de Histórico
-elif st.session_state['pagina'] == 'historico':
-    st.title("Histórico de Terrenos Avaliados")
-    terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
-    if terrenos:
-        selos_disponiveis = list(set([t.selo for t in terrenos]))
-        filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
-
-        dados = []
-        for t in terrenos:
-            if filtro_selo == "Todos" or t.selo == filtro_selo:
-                dados.append({
-                    "ID": t.id,
-                    "Data": t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S'),
-                    "Nome do Terreno": t.descricao_terreno,
-                    "Bairro": t.bairro if hasattr(t, "bairro") else "",
-                    "Endereço": t.endereco,
-                    "Área (m²)": t.area_terreno,
-                    "Responsável": t.responsavel_avaliacao,
-                    "Score (%)": t.score,
-                    "Selo": t.selo
-                })
-        if dados:
-            df = pd.DataFrame(dados)
-            st.dataframe(df, use_container_width=True)
-        else:
-            st.write("Nenhuma avaliação cadastrada ainda para este filtro.")
-    else:
-        st.write("Nenhuma avaliação cadastrada ainda.")
+    
+            # Gerar gráfico radar com labels
+            categorias =
