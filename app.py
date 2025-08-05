@@ -7,7 +7,6 @@ import pandas as pd
 # -------- CSS NOVO para os cards finais do resumo --------
 css_estilo = """
 <style>
-/* Container geral do resumo */
 .resumo-avaliacao-box {
     background: linear-gradient(100deg, #f8fafc 80%, #e9e0fa 100%);
     border-radius: 22px;
@@ -30,7 +29,6 @@ css_estilo = """
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: relative;
     min-height: 150px;
     transition: box-shadow .2s;
 }
@@ -39,31 +37,33 @@ css_estilo = """
 }
 .resumo-col .icon {
     font-size: 2.1rem;
-    margin-bottom: 2px;
-    opacity: .8;
+    margin-bottom: 5px;
+    opacity: .85;
 }
 .resumo-col h4 {
-    font-weight: 700;
+    font-weight: 900;
     color: #5535aa;
-    font-size: 1.13rem;
-    margin-bottom: 6px;
-    letter-spacing: .5px;
+    font-size: 1.19rem;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
     text-align:center;
+    text-transform: uppercase;
 }
 .valor-card {
-    font-size: 2.18rem;
-    font-weight: 800;
+    font-size: 2.38rem;
+    font-weight: 900;
     line-height: 1;
-    margin: 7px 0;
+    margin: 10px 0;
     color: #f52b2b;
 }
 .valor-card.sqi, .selo-categoria { color: #1d5cf7; }
-.valor-pequeno { font-size: 0.98rem; color:#837aa7; font-weight: 400;}
+.valor-pequeno { font-size: 1.06rem; color:#837aa7; font-weight: 400;}
 .selo-categoria {
-    font-size: 1.22rem;
-    font-weight: 800;
-    margin-top: 12px;
+    font-size: 2.05rem;
+    font-weight: 900;
+    margin-top: 14px;
     letter-spacing: 1.1px;
+    text-transform: uppercase;
 }
 .selo-label {
     font-size: 1.01rem;
@@ -71,8 +71,8 @@ css_estilo = """
     margin-top:2px;
     font-weight: 500;
     opacity: 0.70;
+    display: none;
 }
-/* Progress bar */
 .progress-bar-bg{
     width:100%; background:#f3eded; border-radius:9px; height:26px; margin:15px 0 7px 0;
 }
@@ -84,7 +84,6 @@ css_estilo = """
     box-shadow: 0 2px 8px #42268e20;
     display:flex; align-items:center; justify-content:flex-end;
 }
-
 .classificacao-legenda{
     display:flex;
     justify-content:space-between;
@@ -169,6 +168,7 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
+    # == CRITÉRIOS COMERCIAIS, ordem trocada ==
     with st.expander("CRITÉRIOS COMERCIAIS (50%)", expanded=False):
         st.markdown(
             "<h4 style='font-weight:bold; text-align:center;'>Critérios Comerciais</h4>",
@@ -177,9 +177,9 @@ if st.session_state['pagina'] == 'novo':
         with col1:
             localizacao = st.slider("Localização (0 a 15)", 0, 15, 10)
             estimativa_vgv = st.slider("Estimativa de VGV (0 a 15)", 0, 15, 10)
-            adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
         with col2:
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
+            adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
 
     if st.button("Avaliar Terreno"):
         # Cálculo dos scores
@@ -220,47 +220,51 @@ if st.session_state['pagina'] == 'novo':
         finally:
             session.close()
 
-        # --------- NOVO RESUMO VISUAL FINAL MELHORADO -------------
+        # --------- RESUMO VISUAL FINAL MELHORADO -------------
         st.markdown("---")
         st.subheader("RESUMO DA AVALIAÇÃO")
 
         texto_selo = definir_selo(total)
         if "(" in texto_selo:
-            letra, desc = texto_selo.split(" ",1)
-            desc = desc.replace("(","").replace(")","")
+            letra, _ = texto_selo.split(" ",1)
         else:
-            letra, desc = texto_selo, ""
+            letra = texto_selo
 
         perc = min(int(float(total)/100*100), 100)
 
         resumo_html = f"""
         <div class="resumo-avaliacao-box">
           <div class="resumo-grid">
+
             <div class="resumo-col">
               <span class="icon">⚖️</span>
-              <h4>Jurídico</h4>
-              <div class="valor-card">{juridico_total}</div>
-              <div class="valor-pequeno">até 20 pts</div>
+              <h4>JURÍDICO</h4>
+              <div class="valor-card">{juridico_total}%</div>
+              <div class="valor-pequeno">até 20%</div>
             </div>
+
             <div class="resumo-col">
               <span class="icon">🏗️</span>
-              <h4>Físico</h4>
-              <div class="valor-card">{fisico_total}</div>
-              <div class="valor-pequeno">até 30 pts</div>
+              <h4>FÍSICO</h4>
+              <div class="valor-card">{fisico_total}%</div>
+              <div class="valor-pequeno">até 30%</div>
             </div>
+
             <div class="resumo-col">
-              <span class="icon">💼</span>
-              <h4>Comercial</h4>
-              <div class="valor-card">{comercial_total}</div>
-              <div class="valor-pequeno">até 50 pts</div>
+              <span class="icon">🛒</span>
+              <h4>COMERCIAL</h4>
+              <div class="valor-card">{comercial_total}%</div>
+              <div class="valor-pequeno">até 50%</div>
             </div>
+
             <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
               <span class="icon">🏆</span>
-              <h4 style="color:#15388a">Pontos SQI</h4>
-              <div class="valor-card sqi">{total}</div>
-              <div class="selo-categoria">{letra}</div>
-              <div class="selo-label">{desc}</div>
+              <h4 style="color:#15388a">Pontuação SQI</h4>
+              <div class="valor-card sqi">{total}%</div>
+              <div class="selo-categoria">SQI CATEGORIA {letra}</div>
+              <div class="selo-label"></div>
             </div>
+
           </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
@@ -308,4 +312,3 @@ elif st.session_state['pagina'] == 'historico':
             st.write("Nenhuma avaliação cadastrada ainda.")
     finally:
         session.close()
-
