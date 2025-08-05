@@ -190,94 +190,70 @@ if st.session_state['pagina'] == 'novo':
         fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
         comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
         total = juridico_total + fisico_total + comercial_total
-        selo = definir_selo(total) # deve retornar 'B (Bom)' ou 'B'
+        selo = definir_selo(total)
 
         session = SessionLocal()
         try:
             novo_terreno = Terreno(
-                descricao_terreno=descricao_terreno,
-                endereco=endereco,
-                bairro=bairro,
-                area_terreno=area_terreno,
-                altura_maxima=altura_maxima,
-                lencol_freatico_perm=lencol_perm,
-                nivel_lencol=nivel_lencol,
-                permite_outorga=permite_outorga,
-                responsavel_avaliacao=responsavel_avaliacao,
-                doc_regular=doc_regular,
-                ausencia_onus=ausencia_onus,
-                potencial_aprovacao=potencial_aprovacao,
-                area_dimensoes=area_dimensoes,
-                topografia=topografia,
-                infraestrutura=infraestrutura,
-                zoneamento=zoneamento,
-                localizacao=localizacao,
-                estimativa_vgv=estimativa_vgv,
-                demanda_concorrencia=demanda_concorrencia,
-                adequacao_produto=adequacao_produto,
-                score=total,
-                selo=selo
+                # ... seus campos ...
             )
             session.add(novo_terreno)
             session.commit()
         finally:
             session.close()
 
-       # RESOLVENDO RENDER HTML: STRING SEM INDENTAÇÃO, SEM QUEBRAS 
-# E USANDO unsafe_allow_html=True
+        # Tudo isso deve estar DENTRO do if!
+        texto_selo = definir_selo(total)
+        if "(" in texto_selo:
+            letra, _ = texto_selo.split(" ",1)
+        else:
+            letra = texto_selo
+        letra_selo = letra
+        selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>" if total < 60 else f"<div class='selo-categoria'>SELO {letra_selo} SQI</div>"
+        titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
+        perc = min(int(float(total)/100*100), 100)
 
-# Título ao topo do resumo
-titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
+        resumo_html = f"""{titulo_html}
+        <div class="resumo-avaliacao-box">
+        <div class="resumo-grid">
+        <div class="resumo-col">
+        <span class="icon">⚖️</span>
+        <h4>JURÍDICO</h4>
+        <div class="valor-card">{juridico_total}%</div>
+        <div class="valor-pequeno">até 20%</div>
+        </div>
+        <div class="resumo-col">
+        <span class="icon">🏗️</span>
+        <h4>FÍSICO</h4>
+        <div class="valor-card">{fisico_total}%</div>
+        <div class="valor-pequeno">até 30%</div>
+        </div>
+        <div class="resumo-col">
+        <span class="icon">💰</span>
+        <h4>COMERCIAL</h4>
+        <div class="valor-card">{comercial_total}%</div>
+        <div class="valor-pequeno">até 50%</div>
+        </div>
+        <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+        <span class="icon">🏆</span>
+        <h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
+        <div class="valor-card sqi">{total}%</div>
+        {selo_html}
+        <div class="selo-label"></div>
+        </div>
+        </div>
+        <div class="progress-bar-bg" style="margin-bottom:2px;">
+        <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+        </div>
+        <div class="classificacao-legenda" style="margin-top:6px;">
+        <span>D (Regular)</span>
+        <span>C (Médio)</span>
+        <span>B (Bom)</span>
+        <span>A (Excelente)</span>
+        </div>
+        </div>"""
 
-# Selo simplificado para total < 60%
-if "(" in texto_selo:
-    letra, _ = texto_selo.split(" ",1)
-else:
-    letra = texto_selo
-letra_selo = letra  # 'A', 'B', etc
-selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>" if total < 60 else f"<div class='selo-categoria'>SELO {letra_selo} SQI</div>"
-
-resumo_html = f"""{titulo_html}
-<div class="resumo-avaliacao-box">
-<div class="resumo-grid">
-<div class="resumo-col">
-<span class="icon">⚖️</span>
-<h4>JURÍDICO</h4>
-<div class="valor-card">{juridico_total}%</div>
-<div class="valor-pequeno">até 20%</div>
-</div>
-<div class="resumo-col">
-<span class="icon">🏗️</span>
-<h4>FÍSICO</h4>
-<div class="valor-card">{fisico_total}%</div>
-<div class="valor-pequeno">até 30%</div>
-</div>
-<div class="resumo-col">
-<span class="icon">💰</span>
-<h4>COMERCIAL</h4>
-<div class="valor-card">{comercial_total}%</div>
-<div class="valor-pequeno">até 50%</div>
-</div>
-<div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
-<span class="icon">🏆</span>
-<h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
-<div class="valor-card sqi">{total}%</div>
-{selo_html}
-<div class="selo-label"></div>
-</div>
-</div>
-<div class="progress-bar-bg" style="margin-bottom:2px;">
-<div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
-</div>
-<div class="classificacao-legenda" style="margin-top:6px;">
-<span>D (Regular)</span>
-<span>C (Médio)</span>
-<span>B (Bom)</span>
-<span>A (Excelente)</span>
-</div>
-</div>"""
-
-st.markdown(resumo_html, unsafe_allow_html=True)
+        st.markdown(resumo_html, unsafe_allow_html=True)
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
