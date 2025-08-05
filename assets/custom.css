@@ -1,0 +1,25 @@
+/* Define uma fonte padrão e cor de fundo */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f7f7;
+}
+
+/* Estiliza o título principal */
+h1 {
+    color: #2c3e50;
+    text-align: center;
+}
+
+/* Customiza os sliders para ter um visual mais moderno */
+.css-1aq5wrk e1fqkh3o1, .stSlider {
+    background-color: #ecf0f1;
+}
+
+/* Estiliza os containers e cards */
+.card {
+    background-color: #fff;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+}
