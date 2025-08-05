@@ -17,35 +17,50 @@ def local_css(file_name):
 
 local_css("assets/custom.css")
 
-# Inicializa o banco de dados
+# Inicializa o banco
 init_db()
+session = SessionLocal()
 
 # Sidebar
-st.sidebar.header("Menu")
-opcao = st.sidebar.selectbox("Selecione a opção", ["Novo Terreno", "Histórico de Avaliações"])
+st.sidebar.markdown("### ![LOGO](caminho/para/seu/logo.png)", unsafe_allow_html=True)  # Substitua pelo caminho do seu logo
+# Se sua imagem estiver em arquivo local, coloque o caminho local, ex: "assets/logo.png"
+# Para usar uma imagem da web, coloque o URL completo, ex: "https://exemplo.com/logo.png"
 
-# Botão para limpar banco com autenticação
+st.sidebar.header("Menu")
+# Botões para navegação
+col1, col2 = st.sidebar.columns(2)
+novo_button = col1.button("Novo Terreno")
+historico_button = col2.button("Histórico")
+
+# Controle de página
+if novo_button:
+    st.session_state['pagina'] = 'novo'
+if historico_button:
+    st.session_state['pagina'] = 'historico'
+
+# Garantir variável de controle na sessão
+if 'pagina' not in st.session_state:
+    st.session_state['pagina'] = 'inicio'
+
+# Botão de limpeza com senha
 st.sidebar.markdown("---")
 senha_input = st.sidebar.text_input("Digite a senha para limpar o banco", type="password", key="senha_banco")
 botao_limpar = st.sidebar.button("Limpar Banco de Dados")
-
 if botao_limpar:
     if senha_input == "123456":
-        # Limpa o banco: drop e recria as tabelas
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
         st.success("Banco de dados limpo com sucesso!")
     else:
         st.error("Senha incorreta. Acesso negado.")
 
-# Fluxo principal
-session = SessionLocal()
-
-if opcao == "Novo Terreno":
+# Mostrar a página
+if st.session_state['pagina'] == 'novo':
+    # Tela de Novo Terreno
     st.title("Cadastro e Avaliação de Terreno")
     st.write("Preencha os dados do terreno conforme os critérios abaixo:")
 
-    # Macro item: DADOS DO TERRENO
+    # DADOS DO TERRENO
     with st.expander("DADOS DO TERRENO", expanded=True):
         st.markdown("<p style='font-weight: bold;'>Descrição do Terreno</p>", unsafe_allow_html=True)
         descricao_terreno = st.text_area("Descrição do terreno", max_chars=500, key="descricao_terreno").upper()
@@ -63,8 +78,8 @@ if opcao == "Novo Terreno":
         # Responsável pela avaliação
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
-    # Critérios Jurídicos (20%) - colapsável
-    with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=True):
+    # Critérios Jurídicos (20%)
+    with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Jurídicos</p>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -74,8 +89,8 @@ if opcao == "Novo Terreno":
         with col3:
             potencial_aprovacao = st.slider("Potencial de Aprovação (0 a 10)", 0, 10, 6)
 
-    # Critérios Físicos (30%) - colapsável
-    with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=True):
+    # Critérios Físicos (30%)
+    with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Físicos</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
@@ -85,8 +100,8 @@ if opcao == "Novo Terreno":
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # Critérios Comerciais (40%) - colapsável
-    with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=True):
+    # Critérios Comerciais (40%) com subitem "Adequação do Produto"
+    with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
@@ -94,14 +109,11 @@ if opcao == "Novo Terreno":
             estimativa_vgv = st.slider("Estimativa de VGV (0 a 15)", 0, 15, 10)
         with col2:
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
-        # Subitem: Adequação do Produto
+        # Subitem
         st.markdown("**Adequação do Produto (0 a 10)**")
         adequacao_produto = st.slider(
             "Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais"
         )
-
-    # Agora, removemos o macro "Alinhamento com o Produto ",
-    # e colocamos a "Adequação do Produto" como subitem dos critérios comerciais, como feito acima.
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
@@ -112,9 +124,7 @@ if opcao == "Novo Terreno":
                 adequacao_produto
             )
             selo = definir_selo(total)
-
             st.success(f"Terreno avaliado com {total}% - {selo}")
-
             novo_terreno = Terreno(
                 doc_regular=doc_regular,
                 ausencia_onus=ausencia_onus,
@@ -134,11 +144,11 @@ if opcao == "Novo Terreno":
             session.commit()
             st.info("Avaliação salva com sucesso!")
 
-elif opcao == "Histórico de Avaliações":
+elif st.session_state['pagina'] == 'historico':
+    # Tela de Histórico
     st.title("Histórico de Terrenos Avaliados")
     terrenos = session.query(Terreno).all()
     if terrenos:
-        # Filtro por selo
         selos_disponiveis = list(set([t.selo for t in terrenos]))
         filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
         for t in terrenos:
