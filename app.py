@@ -25,9 +25,9 @@ st.sidebar.image(
 st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")  # Título sidebar
 st.sidebar.header("Menu")
 
-# Botões para navegação
-novo_button = st.sidebar.button("Novo Terreno")
-historico_button = st.sidebar.button("Histórico")
+# Botões para navegação com largura completa
+novo_button = st.sidebar.button("Novo Terreno", use_container_width=True)
+historico_button = st.sidebar.button("Histórico", use_container_width=True)
 
 # Controlar a página a ser exibida
 if novo_button:
@@ -40,7 +40,7 @@ if 'pagina' not in st.session_state:
 
 st.sidebar.markdown("---")
 senha_input = st.sidebar.text_input("Digite a senha para limpar o banco", type="password", key="senha_banco")
-botao_limpar = st.sidebar.button("Limpar Banco de Dados")
+botao_limpar = st.sidebar.button("Limpar Banco de Dados", use_container_width=True)
 if botao_limpar:
     if senha_input == "123456":
         Base.metadata.drop_all(bind=engine)
@@ -51,14 +51,16 @@ if botao_limpar:
 
 # Página de Novo Terreno
 if st.session_state['pagina'] == 'novo':
-    st.title("Cadastro e Avaliação de Terreno")
+    st.title("CADASTRO E AVALIAÇÃO DE TERRENO")  # upper case
+
     st.write("Preencha os dados do terreno conforme os critérios abaixo:")
 
     # Macro item: DADOS DO TERRENO (inicia colapsado)
     with st.expander("DADOS DO TERRENO", expanded=False):
-        st.markdown("<p style='font-weight: bold;'>Descrição do Terreno</p>", unsafe_allow_html=True)
-        descricao_terreno = st.text_area("Descrição do terreno", max_chars=500, key="descricao_terreno").upper()
+        st.markdown("<p style='font-weight: bold;'>Nome do terreno</p>", unsafe_allow_html=True)
+        descricao_terreno = st.text_input("Nome do terreno", max_chars=100, key="descricao_terreno").upper()
         endereco = st.text_input("Endereço", key="endereco")
+        bairro = st.text_input("Bairro", key="bairro")
         area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
         altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
         
@@ -135,6 +137,7 @@ if st.session_state['pagina'] == 'novo':
                 selo=selo,
                 descricao_terreno=descricao_terreno,
                 endereco=endereco,
+                bairro=bairro,
                 area_terreno=area_terreno,
                 altura_maxima=altura_maxima,
                 lençol_freatico_perm=lençol_freatico_perm,
@@ -146,7 +149,7 @@ if st.session_state['pagina'] == 'novo':
             session.commit()
             st.info("Avaliação salva com sucesso!")
 
-# --- MELHORIA: Histórico em tabela ordenada do maior para o menor score ---
+# --- Histórico em tabela ordenada do maior para o menor score ---
 
 elif st.session_state['pagina'] == 'historico':
     st.title("Histórico de Terrenos Avaliados")
@@ -161,7 +164,8 @@ elif st.session_state['pagina'] == 'historico':
                 dados.append({
                     "ID": t.id,
                     "Data": t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S'),
-                    "Descrição": t.descricao_terreno,
+                    "Nome do Terreno": t.descricao_terreno,
+                    "Bairro": t.bairro if hasattr(t, "bairro") else "",  # caso banco antigo
                     "Endereço": t.endereco,
                     "Área (m²)": t.area_terreno,
                     "Responsável": t.responsavel_avaliacao,
