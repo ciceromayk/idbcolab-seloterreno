@@ -26,7 +26,7 @@ st.sidebar.image(
 st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")
 st.sidebar.header("Menu")
 
-# Botões de navegação com largura total
+# Botões de navegação
 novo_button = st.sidebar.button("Novo Terreno", use_container_width=True)
 historico_button = st.sidebar.button("Histórico", use_container_width=True)
 
@@ -63,20 +63,16 @@ if st.session_state['pagina'] == 'novo':
         area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
         altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
         
-        # Lençol freático
         lençol_freatico_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lençol_freatico_perm")
         if lençol_freatico_perm == "Não":
             nivel_lençol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lençol")
         else:
             nivel_lençol = None
         
-        # Outorga
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
-        
-        # Responsável
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
-    # Critérios Jurídicos (20%)
+    # Critérios Jurídicos
     with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Jurídicos</p>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
@@ -87,7 +83,7 @@ if st.session_state['pagina'] == 'novo':
         with col3:
             potencial_aprovacao = st.slider("Potencial de Aprovação (0 a 10)", 0, 10, 6)
 
-    # Critérios físicos (30%)
+    # Critérios Físicos
     with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Físicos</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -98,7 +94,7 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # Critérios comerciais (40%) com subitem "Adequação do Produto"
+    # Critérios Comerciais + Adequação do Produto (40%)
     with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -112,7 +108,7 @@ if st.session_state['pagina'] == 'novo':
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
-            # Cálculo score
+            # Cálculo do score
             total = calcular_pontuacao(
                 doc_regular, ausencia_onus, potencial_aprovacao,
                 area_dimensoes, topografia, infraestrutura, zoneamento,
@@ -127,13 +123,14 @@ if st.session_state['pagina'] == 'novo':
             fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento
             fisico_perc = (fisico_total / 30) * 100
 
-            comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
-            comercial_perc = (comercial_total / 50) * 100
+            # Considerar que "adequacao_produto" é um critério comercial
+            com_sub_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
+            comercial_perc = (com_sub_total / 50) * 100
 
-            # Definir selo
+            # Define selo
             selo = definir_selo(total)
 
-            # Salvar no banco
+            # Salva avaliação
             novo_terreno = Terreno(
                 doc_regular=doc_regular,
                 ausencia_onus=ausencia_onus,
@@ -162,17 +159,23 @@ if st.session_state['pagina'] == 'novo':
             session.commit()
             st.success(f"Terreno avaliado com {total}% - {selo}")
 
-            # Geração do gráfico radar
-            categorias = ['Comerciais', 'Jurídicos', 'Físicos']
-            valores = [comercial_perc, juridico_perc, fisico_perc]
-            valores.append(valores[0])  # fecha o radar
+            # Geração do gráfico radar com labels
+            categorias = ['Jurídicos', 'Físicos', 'Comerciais']
+            valores = [juridico_perc, fisico_perc, comercial_perc]
+            valores_fechar = valores + [valores[0]]  # fecha o radar
+
+            # Labels de cada ponto
+            labels = [f"{cat}: {valor:.1f}%" for cat, valor in zip(categorias, valores)]
 
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
-                r=valores,
+                r=valores_fechar,
                 theta=categorias + [categorias[0]],
                 fill='toself',
-                name='Percentual'
+                text=labels,
+                mode='lines+markers+text',
+                textposition='top center',
+                hoverinfo='text'
             ))
             fig.update_layout(
                 polar=dict(
@@ -185,7 +188,7 @@ if st.session_state['pagina'] == 'novo':
             )
             st.plotly_chart(fig, use_container_width=True)
 
-# PÁGINA DE HISTÓRICO
+# Página de Histórico
 elif st.session_state['pagina'] == 'historico':
     st.title("Histórico de Terrenos Avaliados")
     terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
