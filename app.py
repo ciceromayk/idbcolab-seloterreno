@@ -1,6 +1,5 @@
 import streamlit as st
-import plotly.graph_objects as go
-from db import SessionLocal, init_db, engine, Base
+from db import SessionLocal, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 import pandas as pd
@@ -8,7 +7,7 @@ import pandas as pd
 # Configuração da página
 st.set_page_config(page_title="IDBCOLAB - COMITÊ DE PRODUTO", layout="wide")
 
-# CSS estilizado para o resumo
+# CSS estilizado para o resumo (incluindo centralização dos títulos)
 css_estilo = """
 <style>
 .resumo-container {
@@ -25,19 +24,27 @@ css_estilo = """
     width: 220px;
     text-align: center;
     box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 .resumo-box h3 {
     margin-top: 0;
     margin-bottom: 10px;
+    text-align: center;
+    width: 100%;
 }
 .valor-grande {
     font-size: 36px;
     font-weight: bold;
     margin: 10px 0;
 }
-.pequeno {
-    font-size: 14px;
-    margin-top: 5px;
+.selo-categoria {
+    font-size: 32px;
+    font-weight: bold;
+    color: #032BF4;
+    margin-top: 8px;
 }
 </style>
 """
@@ -51,7 +58,6 @@ st.sidebar.image(
 )
 st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")
 st.sidebar.header("Menu")
-# Botões
 novo_button = st.sidebar.button("Novo Terreno", use_container_width=True)
 historico_button = st.sidebar.button("Histórico", use_container_width=True)
 if novo_button:
@@ -117,38 +123,28 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # Critérios comerciais + adequação do produto
-    with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
-        st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
+    # Critérios comerciais + adequação do produto (agora com 50% do score!)
+    with st.expander("CRITÉRIOS COMERCIAIS (50%)", expanded=False):
+        st.markdown("<h4 style='font-weight: bold; text-align:center;'>Critérios Comerciais</h4>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
             localizacao = st.slider("Localização (0 a 15)", 0, 15, 10)
             estimativa_vgv = st.slider("Estimativa de VGV (0 a 15)", 0, 15, 10)
         with col2:
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
-        st.markdown("**Adequação do Produto (0 a 10)**")
+        st.markdown("<h5 style='margin-bottom:2px;'>Adequação do Produto (0 a 10)</h5>", unsafe_allow_html=True)
         adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais")
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
-            # Cálculo e soma dos subitens
-            total = calcular_pontuacao(
-                doc_regular, ausencia_onus, potencial_aprovacao,
-                area_dimensoes, topografia, infraestrutura, zoneamento,
-                localizacao, estimativa_vgv, demanda_concorrencia,
-                adequacao_produto
-            )
+            # AJUSTE DE PESOS
+            juridico_total = doc_regular + ausencia_onus + potencial_aprovacao      # Máx 20 pontos
+            fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento  # Máx 30 pontos
+            comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto  # Máx 50 pontos
 
-            juridico_total = doc_regular + ausencia_onus + potencial_aprovacao
-            fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento
-            comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
+            total = juridico_total + fisico_total + comercial_total     # Máx 100 pontos
 
-            # Percentuais
-            juridico_perc = (juridico_total / 20) * 100
-            fisico_perc = (fisico_total / 30) * 100
-            comercial_perc = (comercial_total / 40) * 100
-
-            # Selo
+            # Selo categoria
             selo = definir_selo(total)
 
             # Salvar avaliação no banco
@@ -182,49 +178,24 @@ if st.session_state['pagina'] == 'novo':
                 <div class='resumo-box'>
                     <h3>Critérios Jurídicos</h3>
                     <div class='valor-grande' style='color:red;'>{juridico_total}</div>
-                    <div>Pontuação: 30</div>
                 </div>
                 <div class='resumo-box'>
                     <h3>Critérios Físicos</h3>
                     <div class='valor-grande' style='color:red;'>{fisico_total}</div>
-                    <div>Pontuação: 20</div>
                 </div>
                 <div class='resumo-box'>
                     <h3>Critérios Comerciais</h3>
                     <div class='valor-grande' style='color:red;'>{comercial_total}</div>
-                    <div>Pontuação: 20</div>
                 </div>
                 <div class='resumo-box'>
-                    <h3>Nota Final</h3>
+                    <h3>PONTUAÇÃO SELO SQI</h3>
                     <div class='valor-grande' style='color:blue;'>{total}</div>
-                    <div class='selo-info'>Selo: {selo}</div>
+                    <div class='selo-categoria'>SELO CATEGORIA: {selo}</div>
                 </div>
             </div>
             """
             st.markdown(resumo_html, unsafe_allow_html=True)
 
-            # Gráfico radar
-            categorias = ['Jurídicos', 'Físicos', 'Comerciais']
-            valores = [juridico_perc, fisico_perc, comercial_perc]
-            valores_fechar = valores + [valores[0]]
-            labels = [f"{cat}: {valor:.1f}%" for cat, valor in zip(categorias, valores)]
-            fig = go.Figure()
-            fig.add_trace(go.Scatterpolar(
-                r=valores_fechar,
-                theta=categorias + [categorias[0]],
-                fill='toself',
-                text=labels,
-                mode='lines+markers+text',
-                textposition='top center',
-                hoverinfo='text'
-            ))
-            fig.update_layout(
-                polar=dict(
-                    radialaxis=dict(visible=True, range=[0, 100])
-                ),
-                showlegend=False
-            )
-            st.plotly_chart(fig, use_container_width=True)
 
 # Página de Histórico
 elif st.session_state['pagina'] == 'historico':
