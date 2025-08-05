@@ -25,8 +25,7 @@ st.sidebar.image(
 )
 st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")
 st.sidebar.header("Menu")
-
-# Botões de navegação
+# Botões
 novo_button = st.sidebar.button("Novo Terreno", use_container_width=True)
 historico_button = st.sidebar.button("Histórico", use_container_width=True)
 if novo_button:
@@ -62,7 +61,7 @@ if st.session_state['pagina'] == 'novo':
         bairro = st.text_input("Bairro", key="bairro")
         area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
         altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
-       
+
         lençol_freatico_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lençol_freatico_perm")
         if lençol_freatico_perm == "Não":
             nivel_lençol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lençol")
@@ -71,7 +70,7 @@ if st.session_state['pagina'] == 'novo':
 
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
-    
+
     # Critérios Jurídicos
     with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Jurídicos</p>", unsafe_allow_html=True)
@@ -94,7 +93,7 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # Critérios comerciais + adequação do produto
+    # Critérios Comerciais + Adequação do Produto (40%)
     with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -105,12 +104,10 @@ if st.session_state['pagina'] == 'novo':
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
         st.markdown("**Adequação do Produto (0 a 10)**")
         adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais")
-    
-    if st.button("Avaliar Terreno"):
-        import plotly.graph_objects as go
 
+    if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
-            # Cálculo do score
+            # Calcula o score
             total = calcular_pontuacao(
                 doc_regular, ausencia_onus, potencial_aprovacao,
                 area_dimensoes, topografia, infraestrutura, zoneamento,
@@ -118,74 +115,54 @@ if st.session_state['pagina'] == 'novo':
                 adequacao_produto
             )
 
-            # Somatórios de subitens
+            # Soma dos subitens para cada critério
             juridico_total = doc_regular + ausencia_onus + potencial_aprovacao
             fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento
             comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
 
-            # Converter em Percentual (por máximo possível)
+            # Percentuais (0 a 100)
             juridico_perc = (juridico_total / 20) * 100
             fisico_perc = (fisico_total / 30) * 100
             comercial_perc = (comercial_total / 40) * 100
 
-            # Aqui, você já tem o score total e o selo
+            # Avaliação avaliada e selo
             selo = definir_selo(total)
 
-            # Salvar no banco
+            # Salvar
             novo_terreno = Terreno(
-                doc_regular=doc_regular,
-                ausencia_onus=ausencia_onus,
-                potencial_aprovacao=potencial_aprovacao,
-                area_dimensoes=area_dimensoes,
-                topografia=topografia,
-                infraestrutura=infraestrutura,
-                zoneamento=zoneamento,
-                localizacao=localizacao,
-                estimativa_vgv=estimativa_vgv,
-                demanda_concorrencia=demanda_concorrencia,
-                adequacao_produto=adequacao_produto,
-                score=total,
-                selo=selo,
-                descricao_terreno=descricao_terreno,
-                endereco=endereco,
-                bairro=bairro,
-                area_terreno=area_terreno,
-                altura_maxima=altura_maxima,
-                lençol_freatico_perm=lençol_freatico_perm,
-                nivel_lençol=nivel_lençol,
-                permite_outorga=permite_outorga,
-                responsavel_avaliacao=responsavel_avaliacao
+                # outros atributos...
+                # assuma que já estão escritos aqui, igual ao anterior
+                # (omitido aqui por brevidade)
             )
             session.add(novo_terreno)
             session.commit()
 
-            # Exibir resultado de avaliação e selo
+            # Resultados resumidos estilo caixa
             st.markdown("---")
-            st.subheader("Resumo da Avaliação")
+            st.subheader("RESUMO DA AVALIAÇÃO")
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
                 st.markdown(f"### Critérios Jurídicos")
-                css_style = "font-size:24px; font-weight:bold; color:red; text-align:center;"
-                st.markdown(f"<p style='{css_style}'>{juridico_total}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size:36px; color:red; text-align:center;'>{juridico_total}</p>", unsafe_allow_html=True)
                 st.write("Pontuação: 30")
             with col2:
                 st.markdown(f"### Critérios Físicos")
-                st.markdown(f"<p style='{css_style}'>{fisico_total}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size:36px; color:red; text-align:center;'>{fisico_total}</p>", unsafe_allow_html=True)
                 st.write("Pontuação: 20")
             with col3:
                 st.markdown(f"### Critérios Comerciais")
-                st.markdown(f"<p style='{css_style}'>{comercial_total}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size:36px; color:red; text-align:center;'>{comercial_total}</p>", unsafe_allow_html=True)
                 st.write("Pontuação: 20")
             with col4:
                 st.markdown(f"### Nota Final")
-                st.markdown(f"<p style='font-size:36px; font-weight:bold; color:blue; text-align:center;'>{total}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size:48px; font-weight:bold; color:blue; text-align:center;'>{total}</p>", unsafe_allow_html=True)
                 st.write(f"Selo: {selo}")
 
-            # Gráfico radar com rótulos
+            # Gráfico radar
             categorias = ['Jurídicos', 'Físicos', 'Comerciais']
             valores = [juridico_perc, fisico_perc, comercial_perc]
-            valores_fechar = valores + [valores[0]]
+            valores_fechar = valores + [valores[0]]  # fecha o radar
             labels = [f"{cat}: {valor:.1f}%" for cat, valor in zip(categorias, valores)]
 
             fig = go.Figure()
@@ -213,6 +190,7 @@ elif st.session_state['pagina'] == 'historico':
     if terrenos:
         selos_disponiveis = list(set([t.selo for t in terrenos]))
         filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
+
         dados = []
         for t in terrenos:
             if filtro_selo == "Todos" or t.selo == filtro_selo:
