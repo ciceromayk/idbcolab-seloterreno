@@ -8,17 +8,43 @@ import pandas as pd
 # Configuração da página
 st.set_page_config(page_title="IDBCOLAB - COMITÊ DE PRODUTO", layout="wide")
 
-def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# CSS estilizado para o resumo
+css_estilo = """
+<style>
+.resumo-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 30px;
+    font-family: Arial, sans-serif;
+}
+.resumo-box {
+    background-color: #ffe6e6;
+    padding: 20px;
+    border-radius: 10px;
+    width: 220px;
+    text-align: center;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+}
+.resumo-box h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.valor-grande {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+.pequeno {
+    font-size: 14px;
+    margin-top: 5px;
+}
+</style>
+"""
 
-local_css("assets/custom.css")
+st.markdown(css_estilo, unsafe_allow_html=True)
 
-# Inicializa o banco
-init_db()
-session = SessionLocal()
-
-# Sidebar
+# Setup do seu app
 st.sidebar.image(
     "https://raw.githubusercontent.com/ciceromayk/idbcolab-referencia/main/LOGO%20IDBCOLAB.png",
     use_container_width=True
@@ -35,7 +61,7 @@ if historico_button:
 if 'pagina' not in st.session_state:
     st.session_state['pagina'] = 'inicio'
 
-# Limpar banco
+# Limpeza do banco
 st.sidebar.markdown("---")
 senha_input = st.sidebar.text_input("Digite a senha para limpar o banco", type="password", key="senha_banco")
 botao_limpar = st.sidebar.button("Limpar Banco de Dados", use_container_width=True)
@@ -93,7 +119,7 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # Critérios Comerciais + Adequação do Produto (40%)
+    # Critérios comerciais + adequação do produto
     with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -107,7 +133,7 @@ if st.session_state['pagina'] == 'novo':
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
-            # Calcula o score
+            # Cálculo e soma dos subitens
             total = calcular_pontuacao(
                 doc_regular, ausencia_onus, potencial_aprovacao,
                 area_dimensoes, topografia, infraestrutura, zoneamento,
@@ -115,56 +141,69 @@ if st.session_state['pagina'] == 'novo':
                 adequacao_produto
             )
 
-            # Soma dos subitens para cada critério
             juridico_total = doc_regular + ausencia_onus + potencial_aprovacao
             fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento
             comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
 
-            # Percentuais (0 a 100)
+            # Percentuais
             juridico_perc = (juridico_total / 20) * 100
             fisico_perc = (fisico_total / 30) * 100
             comercial_perc = (comercial_total / 40) * 100
 
-            # Avaliação avaliada e selo
+            # Selo
             selo = definir_selo(total)
 
-            # Salvar
+            # Salvar avaliação
             novo_terreno = Terreno(
-                # outros atributos...
-                # assuma que já estão escritos aqui, igual ao anterior
-                # (omitido aqui por brevidade)
+                # elementos de sua implementação...
+                # por exemplo:
+                # descricao_terreno=descricao_terreno,
+                # endereco=endereco,
+                # bairro=bairro,
+                # ... demais atributos ...
+                score=total,
+                selo=selo,
+                # ... outros atributos necessários ...
             )
             session.add(novo_terreno)
             session.commit()
 
-            # Resultados resumidos estilo caixa
+            # Exibir o resultado com estilo
             st.markdown("---")
             st.subheader("RESUMO DA AVALIAÇÃO")
-            col1, col2, col3, col4 = st.columns(4)
 
-            with col1:
-                st.markdown(f"### Critérios Jurídicos")
-                st.markdown(f"<p style='font-size:36px; color:red; text-align:center;'>{juridico_total}</p>", unsafe_allow_html=True)
-                st.write("Pontuação: 30")
-            with col2:
-                st.markdown(f"### Critérios Físicos")
-                st.markdown(f"<p style='font-size:36px; color:red; text-align:center;'>{fisico_total}</p>", unsafe_allow_html=True)
-                st.write("Pontuação: 20")
-            with col3:
-                st.markdown(f"### Critérios Comerciais")
-                st.markdown(f"<p style='font-size:36px; color:red; text-align:center;'>{comercial_total}</p>", unsafe_allow_html=True)
-                st.write("Pontuação: 20")
-            with col4:
-                st.markdown(f"### Nota Final")
-                st.markdown(f"<p style='font-size:48px; font-weight:bold; color:blue; text-align:center;'>{total}</p>", unsafe_allow_html=True)
-                st.write(f"Selo: {selo}")
+            # HTML estilizado
+            resumo_html = f"""
+            <div class='resumo-container'>
+                <div class='resumo-box'>
+                    <h3>Critérios Jurídicos</h3>
+                    <div class='valor-grande' style='color:red;'>{juridico_total}</div>
+                    <div>Pontuação: 30</div>
+                </div>
+                <div class='resumo-box'>
+                    <h3>Critérios Físicos</h3>
+                    <div class='valor-grande' style='color:red;'>{fisico_total}</div>
+                    <div>Pontuação: 20</div>
+                </div>
+                <div class='resumo-box'>
+                    <h3>Critérios Comerciais</h3>
+                    <div class='valor-grande' style='color:red;'>{comercial_total}</div>
+                    <div>Pontuação: 20</div>
+                </div>
+                <div class='resumo-box'>
+                    <h3>Nota Final</h3>
+                    <div class='valor-grande' style='color:blue;'>{total}</div>
+                    <div class='selo-info'>Selo: {selo}</div>
+                </div>
+            </div>
+            """
+            st.markdown(resumo_html, unsafe_allow_html=True)
 
             # Gráfico radar
             categorias = ['Jurídicos', 'Físicos', 'Comerciais']
             valores = [juridico_perc, fisico_perc, comercial_perc]
-            valores_fechar = valores + [valores[0]]  # fecha o radar
+            valores_fechar = valores + [valores[0]]
             labels = [f"{cat}: {valor:.1f}%" for cat, valor in zip(categorias, valores)]
-
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
                 r=valores_fechar,
