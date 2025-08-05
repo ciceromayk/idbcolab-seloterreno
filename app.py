@@ -4,12 +4,7 @@ from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 
 # Configuração da página
-st.set_page_config(
-    page_title="Avaliação de Terrenos - SQI",
-    page_icon="🏠",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="IDBCOLAB - COMITÊ DE PRODUTO", layout="wide")
 
 def local_css(file_name):
     with open(file_name) as f:
@@ -21,12 +16,19 @@ local_css("assets/custom.css")
 init_db()
 session = SessionLocal()
 
-# Sidebar com logotipo e botões alinhados verticalmente
-st.sidebar.image("/workspaces/idbcolab-seloterreno/LOGO IDBCOLAB.png", use_container_width=True)
+# Sidebar com logotipo e título
+st.sidebar.image(
+    "https://raw.githubusercontent.com/ciceromayk/idbcolab-referencia/main/LOGO%20IDBCOLAB.png",
+    use_container_width=True
+)
+st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")  # Título sidebar
 st.sidebar.header("Menu")
+
+# Botões para navegação
 novo_button = st.sidebar.button("Novo Terreno")
 historico_button = st.sidebar.button("Histórico")
 
+# Controlar a página a ser exibida
 if novo_button:
     st.session_state['pagina'] = 'novo'
 if historico_button:
