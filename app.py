@@ -279,7 +279,6 @@ resumo_html = f"""{titulo_html}
 
 st.markdown(resumo_html, unsafe_allow_html=True)
 
-
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
     st.title("Histórico de Terrenos Avaliados")
