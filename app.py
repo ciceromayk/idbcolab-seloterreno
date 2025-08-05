@@ -29,12 +29,10 @@ st.sidebar.header("Menu")
 # Botões de navegação
 novo_button = st.sidebar.button("Novo Terreno", use_container_width=True)
 historico_button = st.sidebar.button("Histórico", use_container_width=True)
-
 if novo_button:
     st.session_state['pagina'] = 'novo'
 if historico_button:
     st.session_state['pagina'] = 'historico'
-
 if 'pagina' not in st.session_state:
     st.session_state['pagina'] = 'inicio'
 
@@ -52,6 +50,8 @@ if botao_limpar:
 
 # Página de Novo Terreno
 if st.session_state['pagina'] == 'novo':
+    import plotly.graph_objects as go
+
     st.title("CADASTRO E AVALIAÇÃO DE TERRENO")
     st.write("Preencha os dados do terreno conforme os critérios abaixo:")
 
@@ -62,13 +62,13 @@ if st.session_state['pagina'] == 'novo':
         bairro = st.text_input("Bairro", key="bairro")
         area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
         altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
-        
+       
         lençol_freatico_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lençol_freatico_perm")
         if lençol_freatico_perm == "Não":
             nivel_lençol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lençol")
         else:
             nivel_lençol = None
-        
+
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
     
@@ -93,8 +93,8 @@ if st.session_state['pagina'] == 'novo':
         with col2:
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
-    
-    # Critérios Comerciais + Adequação do Produto
+
+    # Critérios comerciais + adequação do produto
     with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -107,6 +107,8 @@ if st.session_state['pagina'] == 'novo':
         adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais")
     
     if st.button("Avaliar Terreno"):
+        import plotly.graph_objects as go
+
         with st.spinner("Processando avaliação..."):
             # Cálculo do score
             total = calcular_pontuacao(
@@ -116,19 +118,20 @@ if st.session_state['pagina'] == 'novo':
                 adequacao_produto
             )
 
-            # Calcular totais e converter em percentual
+            # Somatórios de subitens
             juridico_total = doc_regular + ausencia_onus + potencial_aprovacao
             fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento
             comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
 
+            # Converter em Percentual (por máximo possível)
             juridico_perc = (juridico_total / 20) * 100
             fisico_perc = (fisico_total / 30) * 100
             comercial_perc = (comercial_total / 40) * 100
 
-            # Definir selo
+            # Aqui, você já tem o score total e o selo
             selo = definir_selo(total)
 
-            # Salvar
+            # Salvar no banco
             novo_terreno = Terreno(
                 doc_regular=doc_regular,
                 ausencia_onus=ausencia_onus,
@@ -156,16 +159,35 @@ if st.session_state['pagina'] == 'novo':
             session.add(novo_terreno)
             session.commit()
 
-            # Mostrar avaliação, selo e nota
-            st.write(f"**Avaliação do Terreno:** {total}%")
-            st.write(f"**Selo:** {selo} - Nota: {total}")
+            # Exibir resultado de avaliação e selo
+            st.markdown("---")
+            st.subheader("Resumo da Avaliação")
+            col1, col2, col3, col4 = st.columns(4)
 
-            # Gráfico radar com labels
+            with col1:
+                st.markdown(f"### Critérios Jurídicos")
+                css_style = "font-size:24px; font-weight:bold; color:red; text-align:center;"
+                st.markdown(f"<p style='{css_style}'>{juridico_total}</p>", unsafe_allow_html=True)
+                st.write("Pontuação: 30")
+            with col2:
+                st.markdown(f"### Critérios Físicos")
+                st.markdown(f"<p style='{css_style}'>{fisico_total}</p>", unsafe_allow_html=True)
+                st.write("Pontuação: 20")
+            with col3:
+                st.markdown(f"### Critérios Comerciais")
+                st.markdown(f"<p style='{css_style}'>{comercial_total}</p>", unsafe_allow_html=True)
+                st.write("Pontuação: 20")
+            with col4:
+                st.markdown(f"### Nota Final")
+                st.markdown(f"<p style='font-size:36px; font-weight:bold; color:blue; text-align:center;'>{total}</p>", unsafe_allow_html=True)
+                st.write(f"Selo: {selo}")
+
+            # Gráfico radar com rótulos
             categorias = ['Jurídicos', 'Físicos', 'Comerciais']
             valores = [juridico_perc, fisico_perc, comercial_perc]
             valores_fechar = valores + [valores[0]]
-
             labels = [f"{cat}: {valor:.1f}%" for cat, valor in zip(categorias, valores)]
+
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
                 r=valores_fechar,
@@ -178,7 +200,7 @@ if st.session_state['pagina'] == 'novo':
             ))
             fig.update_layout(
                 polar=dict(
-                    radialaxis=dict(visible=True, range=[0,100])
+                    radialaxis=dict(visible=True, range=[0, 100])
                 ),
                 showlegend=False
             )
