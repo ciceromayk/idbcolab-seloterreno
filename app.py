@@ -133,7 +133,12 @@ if st.session_state['pagina'] == 'novo':
                 score=total,
                 selo=selo,
                 descricao_terreno=descricao_terreno,
+                endereco=endereco,
                 area_terreno=area_terreno,
+                altura_maxima=altura_maxima,
+                lençol_freatico_perm=lençol_freatico_perm,
+                nivel_lençol=nivel_lençol,
+                permite_outorga=permite_outorga,
                 responsavel_avaliacao=responsavel_avaliacao
             )
             session.add(novo_terreno)
@@ -154,6 +159,7 @@ elif st.session_state['pagina'] == 'historico':
                     f"<p><strong>ID:</strong> {t.id}</p>"
                     f"<p><strong>Data:</strong> {t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S')}</p>"
                     f"<p><strong>Descrição:</strong> {t.descricao_terreno}</p>"
+                    f"<p><strong>Endereço:</strong> {t.endereco}</p>"
                     f"<p><strong>Área:</strong> {t.area_terreno} m²</p>"
                     f"<p><strong>Responsável:</strong> {t.responsavel_avaliacao}</p>"
                     f"<p><strong>Score:</strong> {t.score}%</p>"
