@@ -4,7 +4,7 @@ from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 import pandas as pd
 
-# CSS para os cards finais do resumo, igual à imagem
+# -------- CSS NOVO para os cards finais do resumo --------
 css_estilo = """
 <style>
 /* Container geral do resumo */
@@ -220,63 +220,61 @@ if st.session_state['pagina'] == 'novo':
         finally:
             session.close()
 
-        # --------- RESUMO VISUAL FINAL -------------
-        # --------- RESUMO VISUAL FINAL MELHORADO -------------
-st.markdown("---")
-st.subheader("RESUMO DA AVALIAÇÃO")
+        # --------- NOVO RESUMO VISUAL FINAL MELHORADO -------------
+        st.markdown("---")
+        st.subheader("RESUMO DA AVALIAÇÃO")
 
-texto_selo = definir_selo(total)
-if "(" in texto_selo:
-    letra, desc = texto_selo.split(" ",1)
-    desc = desc.replace("(","").replace(")","")
-else:
-    letra, desc = texto_selo, ""
+        texto_selo = definir_selo(total)
+        if "(" in texto_selo:
+            letra, desc = texto_selo.split(" ",1)
+            desc = desc.replace("(","").replace(")","")
+        else:
+            letra, desc = texto_selo, ""
 
-perc = min(int(float(total)/100*100), 100)
+        perc = min(int(float(total)/100*100), 100)
 
-resumo_html = f"""
-<div class="resumo-avaliacao-box">
-  <div class="resumo-grid">
-    <div class="resumo-col">
-      <span class="icon">⚖️</span>
-      <h4>Jurídico</h4>
-      <div class="valor-card">{juridico_total}</div>
-      <div class="valor-pequeno">até 20 pts</div>
-    </div>
-    <div class="resumo-col">
-      <span class="icon">🏗️</span>
-      <h4>Físico</h4>
-      <div class="valor-card">{fisico_total}</div>
-      <div class="valor-pequeno">até 30 pts</div>
-    </div>
-    <div class="resumo-col">
-      <span class="icon">💼</span>
-      <h4>Comercial</h4>
-      <div class="valor-card">{comercial_total}</div>
-      <div class="valor-pequeno">até 50 pts</div>
-    </div>
-    <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
-      <span class="icon">🏆</span>
-      <h4 style="color:#15388a">Pontos SQI</h4>
-      <div class="valor-card sqi">{total}</div>
-      <div class="selo-categoria">{letra}</div>
-      <div class="selo-label">{desc}</div>
-    </div>
-  </div>
-  <div class="progress-bar-bg">
-    <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
-  </div>
-  <div class="classificacao-legenda">
-    <span>E (Ruim)</span>
-    <span>D (Regular)</span>
-    <span>C (Médio)</span>
-    <span>B (Bom)</span>
-    <span>A (Excelente)</span>
-  </div>
-</div>
-"""
-st.markdown(resumo_html, unsafe_allow_html=True)
-
+        resumo_html = f"""
+        <div class="resumo-avaliacao-box">
+          <div class="resumo-grid">
+            <div class="resumo-col">
+              <span class="icon">⚖️</span>
+              <h4>Jurídico</h4>
+              <div class="valor-card">{juridico_total}</div>
+              <div class="valor-pequeno">até 20 pts</div>
+            </div>
+            <div class="resumo-col">
+              <span class="icon">🏗️</span>
+              <h4>Físico</h4>
+              <div class="valor-card">{fisico_total}</div>
+              <div class="valor-pequeno">até 30 pts</div>
+            </div>
+            <div class="resumo-col">
+              <span class="icon">💼</span>
+              <h4>Comercial</h4>
+              <div class="valor-card">{comercial_total}</div>
+              <div class="valor-pequeno">até 50 pts</div>
+            </div>
+            <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+              <span class="icon">🏆</span>
+              <h4 style="color:#15388a">Pontos SQI</h4>
+              <div class="valor-card sqi">{total}</div>
+              <div class="selo-categoria">{letra}</div>
+              <div class="selo-label">{desc}</div>
+            </div>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+          </div>
+          <div class="classificacao-legenda">
+            <span>E (Ruim)</span>
+            <span>D (Regular)</span>
+            <span>C (Médio)</span>
+            <span>B (Bom)</span>
+            <span>A (Excelente)</span>
+          </div>
+        </div>
+        """
+        st.markdown(resumo_html, unsafe_allow_html=True)
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
