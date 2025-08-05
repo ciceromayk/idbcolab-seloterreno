@@ -94,7 +94,7 @@ if st.session_state['pagina'] == 'novo':
             topografia = st.slider("Topografia (0 a 5)", 0, 5, 3)
         with col2:
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
-            zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7}
+            zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
     
     
     # Critérios Comerciais + Adequação do Produto
