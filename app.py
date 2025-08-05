@@ -4,34 +4,34 @@ from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 import pandas as pd
 
-# =========== CSS para layout dos cards e resumo ============
+# CSS para os cards finais do resumo, igual à imagem
 css_estilo = """
 <style>
 .resumo-container {
     display: flex;
     justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 18px;
+    gap: 21px;
     margin: 30px 0 0 0;
+    flex-wrap: wrap;
 }
 .resumo-box {
     background: #ffe6eb;
-    border-radius: 16px;
-    box-shadow: 0 3px 13px 0 rgba(0,0,0,0.10);
-    width: 145px;
-    min-height: 145px;
+    border-radius: 14px;
+    box-shadow: 0 1.5px 8px 0 rgba(0,0,0,0.08);
+    width: 155px;
+    min-height: 125px;
+    padding: 16px 6px 13px 6px;
     text-align: center;
-    padding: 16px 4px 16px 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 .resumo-box h3 {
-    font-size: 1.09rem;
+    font-size: 1.03rem;
     font-weight: 600;
-    color: #39325e;
-    margin: 0 0 11px 0;
+    color: #39205f;
+    margin: 0 0 10px 0;
     text-align: center;
     width: 100%;
 }
@@ -45,36 +45,39 @@ css_estilo = """
     color: #184eb8;
 }
 .selo-categoria {
-    font-size: 1.08rem;
+    font-size: 1.02rem;
     color: #184eb8;
     font-weight: 700;
-    margin: 6px 0 0 0;
+    margin: 8px 0 0 0;
     letter-spacing: 1.1px;
 }
 .selo-label {
-    font-size: .93rem;
+    font-size: .99rem;
     color: #184eb8;
     font-weight: 500;
     line-height: 1.1;
+    margin: 0;
 }
-@media (max-width: 700px) {
-    .resumo-container {flex-direction: column; gap:14px;}
-    .resumo-box {width:94vw;}
+@media (max-width: 650px) {
+    .resumo-container {flex-direction: column;}
+    .resumo-box {width:96vw;}
 }
 </style>
 """
 st.markdown(css_estilo, unsafe_allow_html=True)
 
-# Sidebar
+# Sidebar, menu, manutenção do banco
 st.sidebar.image(
     "https://raw.githubusercontent.com/ciceromayk/idbcolab-referencia/main/LOGO%20IDBCOLAB.png",
     use_container_width=True
 )
 st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")
 st.sidebar.header("Menu")
-if st.sidebar.button("Novo Terreno", use_container_width=True):
+novo_button = st.sidebar.button("Novo Terreno", use_container_width=True)
+historico_button = st.sidebar.button("Histórico", use_container_width=True)
+if novo_button:
     st.session_state['pagina'] = 'novo'
-if st.sidebar.button("Histórico", use_container_width=True):
+if historico_button:
     st.session_state['pagina'] = 'historico'
 if 'pagina' not in st.session_state:
     st.session_state['pagina'] = 'inicio'
@@ -100,17 +103,14 @@ if st.session_state['pagina'] == 'novo':
         bairro = st.text_input("Bairro", key="bairro")
         area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
         altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
-
         lencol_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lencol_perm")
         if lencol_perm == "Não":
             nivel_lencol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lencol")
         else:
             nivel_lencol = None
-
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
-    # Critérios Jurídicos
     with st.expander("CRITÉRIOS JURÍDICOS (20%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Jurídicos</p>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
@@ -121,7 +121,6 @@ if st.session_state['pagina'] == 'novo':
         with col3:
             potencial_aprovacao = st.slider("Potencial de Aprovação (0 a 10)", 0, 10, 6)
 
-    # Critérios Físicos
     with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Físicos</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -132,7 +131,6 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # Critérios comerciais, COM bloco destacado para Adequação do Produto
     with st.expander("CRITÉRIOS COMERCIAIS (50%)", expanded=False):
         st.markdown(
             "<h4 style='font-weight:bold; text-align:center;'>Critérios Comerciais</h4>",
@@ -141,12 +139,9 @@ if st.session_state['pagina'] == 'novo':
         with col1:
             localizacao = st.slider("Localização (0 a 15)", 0, 15, 10)
             estimativa_vgv = st.slider("Estimativa de VGV (0 a 15)", 0, 15, 10)
+            adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
         with col2:
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
-        st.markdown(
-            "<h5 style='margin-bottom:2px; margin-top:18px;'>Adequação do Produto (0 a 10)</h5>",
-            unsafe_allow_html=True)
-        adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
 
     if st.button("Avaliar Terreno"):
         # Cálculo dos scores
@@ -154,8 +149,8 @@ if st.session_state['pagina'] == 'novo':
         fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
         comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
         total = juridico_total + fisico_total + comercial_total
+        selo = definir_selo(total) # deve retornar 'B (Bom)' ou 'B'
 
-        selo = definir_selo(total)  # Assuma que retorna "SQI B (Bom)" ou similar
         session = SessionLocal()
         try:
             novo_terreno = Terreno(
@@ -187,10 +182,16 @@ if st.session_state['pagina'] == 'novo':
         finally:
             session.close()
 
-        # ============ RESUMO VISUAL =============
+        # --------- RESUMO VISUAL FINAL -------------
         st.markdown("---")
         st.subheader("RESUMO DA AVALIAÇÃO")
 
+        texto_selo = definir_selo(total)
+        if "(" in texto_selo:
+            letra, desc = texto_selo.split(" ",1)
+            desc = desc.replace("(","").replace(")","")
+        else:
+            letra, desc = texto_selo, ""
         resumo_html = f"""
         <div class='resumo-container'>
             <div class='resumo-box'>
@@ -208,7 +209,8 @@ if st.session_state['pagina'] == 'novo':
             <div class='resumo-box'>
                 <h3>Pontuação<br>SELO SQI</h3>
                 <div class='valor-grande sqi'>{total}</div>
-                <div class='selo-categoria'>{selo}</div>
+                <div class='selo-categoria'>SQI {letra}</div>
+                <p class='selo-label'>{desc}</p>
             </div>
         </div>
         """
