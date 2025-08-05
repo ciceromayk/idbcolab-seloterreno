@@ -13,7 +13,7 @@ st.set_page_config(
 
 def local_css(file_name):
     with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 local_css("assets/custom.css")
 
@@ -21,28 +21,20 @@ local_css("assets/custom.css")
 init_db()
 session = SessionLocal()
 
-# Sidebar
-st.sidebar.markdown("### ![LOGO](caminho/para/seu/logo.png)", unsafe_allow_html=True)  # Substitua pelo caminho do seu logo
-# Se sua imagem estiver em arquivo local, coloque o caminho local, ex: "assets/logo.png"
-# Para usar uma imagem da web, coloque o URL completo, ex: "https://exemplo.com/logo.png"
-
+# Sidebar com logotipo e botões alinhados verticalmente
+st.sidebar.image("/workspaces/idbcolab-seloterreno/LOGO IDBCOLAB.png", use_column_width=True)
 st.sidebar.header("Menu")
-# Botões para navegação
-col1, col2 = st.sidebar.columns(2)
-novo_button = col1.button("Novo Terreno")
-historico_button = col2.button("Histórico")
+novo_button = st.sidebar.button("Novo Terreno")
+historico_button = st.sidebar.button("Histórico")
 
-# Controle de página
 if novo_button:
     st.session_state['pagina'] = 'novo'
 if historico_button:
     st.session_state['pagina'] = 'historico'
 
-# Garantir variável de controle na sessão
 if 'pagina' not in st.session_state:
     st.session_state['pagina'] = 'inicio'
 
-# Botão de limpeza com senha
 st.sidebar.markdown("---")
 senha_input = st.sidebar.text_input("Digite a senha para limpar o banco", type="password", key="senha_banco")
 botao_limpar = st.sidebar.button("Limpar Banco de Dados")
@@ -54,14 +46,13 @@ if botao_limpar:
     else:
         st.error("Senha incorreta. Acesso negado.")
 
-# Mostrar a página
+# Página de Novo Terreno
 if st.session_state['pagina'] == 'novo':
-    # Tela de Novo Terreno
     st.title("Cadastro e Avaliação de Terreno")
     st.write("Preencha os dados do terreno conforme os critérios abaixo:")
 
-    # DADOS DO TERRENO
-    with st.expander("DADOS DO TERRENO", expanded=True):
+    # Macro item: DADOS DO TERRENO (inicia colapsado)
+    with st.expander("DADOS DO TERRENO", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Descrição do Terreno</p>", unsafe_allow_html=True)
         descricao_terreno = st.text_area("Descrição do terreno", max_chars=500, key="descricao_terreno").upper()
         endereco = st.text_input("Endereço", key="endereco")
@@ -109,11 +100,8 @@ if st.session_state['pagina'] == 'novo':
             estimativa_vgv = st.slider("Estimativa de VGV (0 a 15)", 0, 15, 10)
         with col2:
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
-        # Subitem
         st.markdown("**Adequação do Produto (0 a 10)**")
-        adequacao_produto = st.slider(
-            "Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais"
-        )
+        adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais")
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
@@ -138,14 +126,17 @@ if st.session_state['pagina'] == 'novo':
                 demanda_concorrencia=demanda_concorrencia,
                 adequacao_produto=adequacao_produto,
                 score=total,
-                selo=selo
+                selo=selo,
+                descricao_terreno=descricao_terreno,
+                area_terreno=area_terreno,
+                responsavel_avaliacao=responsavel_avaliacao
             )
             session.add(novo_terreno)
             session.commit()
             st.info("Avaliação salva com sucesso!")
 
+# Página de Histórico
 elif st.session_state['pagina'] == 'historico':
-    # Tela de Histórico
     st.title("Histórico de Terrenos Avaliados")
     terrenos = session.query(Terreno).all()
     if terrenos:
@@ -155,10 +146,13 @@ elif st.session_state['pagina'] == 'historico':
             if filtro_selo == "Todos" or t.selo == filtro_selo:
                 st.markdown(
                     f"<div class='card'>"
-                    f"<p>ID: {t.id}</p>"
-                    f"<p>Data: {t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S')}</p>"
-                    f"<p>Score: {t.score}%</p>"
-                    f"<p><strong>Selo: {t.selo}</strong></p>"
+                    f"<p><strong>ID:</strong> {t.id}</p>"
+                    f"<p><strong>Data:</strong> {t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S')}</p>"
+                    f"<p><strong>Descrição:</strong> {t.descricao_terreno}</p>"
+                    f"<p><strong>Área:</strong> {t.area_terreno} m²</p>"
+                    f"<p><strong>Responsável:</strong> {t.responsavel_avaliacao}</p>"
+                    f"<p><strong>Score:</strong> {t.score}%</p>"
+                    f"<p><strong>Selo:</strong> {t.selo}</p>"
                     "</div>",
                     unsafe_allow_html=True
                 )
