@@ -223,17 +223,22 @@ if st.session_state['pagina'] == 'novo':
         finally:
             session.close()
 
-        # RESOLVENDO RENDER HTML: STRING SEM INDENTAÇÃO, SEM QUEBRAS 
-        # E USANDO unsafe_allow_html=True
-        texto_selo = definir_selo(total)
-        if "(" in texto_selo:
-            letra, _ = texto_selo.split(" ",1)
-        else:
-            letra = texto_selo
+       # RESOLVENDO RENDER HTML: STRING SEM INDENTAÇÃO, SEM QUEBRAS 
+# E USANDO unsafe_allow_html=True
 
-        perc = min(int(float(total)/100*100), 100)
+# Título ao topo do resumo
+titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
 
-        resumo_html = f"""<div class="resumo-avaliacao-box">
+# Selo simplificado para total < 60%
+if "(" in texto_selo:
+    letra, _ = texto_selo.split(" ",1)
+else:
+    letra = texto_selo
+letra_selo = letra  # 'A', 'B', etc
+selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>" if total < 60 else f"<div class='selo-categoria'>SELO {letra_selo} SQI</div>"
+
+resumo_html = f"""{titulo_html}
+<div class="resumo-avaliacao-box">
 <div class="resumo-grid">
 <div class="resumo-col">
 <span class="icon">⚖️</span>
@@ -248,24 +253,23 @@ if st.session_state['pagina'] == 'novo':
 <div class="valor-pequeno">até 30%</div>
 </div>
 <div class="resumo-col">
-<span class="icon">🛒</span>
+<span class="icon">💰</span>
 <h4>COMERCIAL</h4>
 <div class="valor-card">{comercial_total}%</div>
 <div class="valor-pequeno">até 50%</div>
 </div>
 <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
 <span class="icon">🏆</span>
-<h4 style="color:#15388a">Pontuação SQI</h4>
+<h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
 <div class="valor-card sqi">{total}%</div>
-<div class="selo-categoria">SQI CATEGORIA {letra}</div>
+{selo_html}
 <div class="selo-label"></div>
 </div>
 </div>
-<div class="progress-bar-bg">
+<div class="progress-bar-bg" style="margin-bottom:2px;">
 <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
 </div>
-<div class="classificacao-legenda">
-<span>E (Ruim)</span>
+<div class="classificacao-legenda" style="margin-top:6px;">
 <span>D (Regular)</span>
 <span>C (Médio)</span>
 <span>B (Bom)</span>
@@ -273,7 +277,8 @@ if st.session_state['pagina'] == 'novo':
 </div>
 </div>"""
 
-        st.markdown(resumo_html, unsafe_allow_html=True)
+st.markdown(resumo_html, unsafe_allow_html=True)
+
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
