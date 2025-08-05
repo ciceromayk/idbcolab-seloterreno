@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, LargeBinary, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -11,31 +11,30 @@ class Terreno(Base):
     data_avaliacao = Column(DateTime, default=datetime.utcnow)
     
     # Dados do Terreno
-    descricao = Column(String)
-    endereco = Column(String)
-    street_view_img = Column(LargeBinary)  # Armazena a imagem em formato binário
-    area_terreno = Column(Float)
-    altura_maxima = Column(Float)
-    lenol_freatico_permite_subsolo = Column(Boolean)
-    responsavel = Column(String)
+    descricao = Column(String)  # Descrição do terreno
+    endereco = Column(String)    # Endereço do terreno
+    area_terreno = Column(Float) # Área do terreno em m²
+    altura_maxima = Column(Float) # Altura máxima a construir em metros
+    lenol_freatico_permite_subsolo = Column(Boolean) # Permite subsolo? (Sim/Não)
+    responsavel = Column(String)  # Responsável pela avaliação
     
     # Critérios Jurídicos (20%)
-    doc_regular = Column(Integer)
-    ausencia_onus = Column(Integer)
-    potencial_aprovacao = Column(Integer)
+    doc_regular = Column(Integer)        # Documentação Regular
+    ausencia_onus = Column(Integer)      # Ausência de Ônus
+    potencial_aprovacao = Column(Integer) # Potencial de Aprovação
     
     # Critérios Físicos (30%)
-    area_dimensoes = Column(Integer)
-    topografia = Column(Integer)
-    infraestrutura = Column(Integer)
-    zoneamento = Column(Integer)
+    area_dimensoes = Column(Integer)     # Área e Dimensões
+    topografia = Column(Integer)          # Topografia
+    infraestrutura = Column(Integer)      # Infraestrutura Existente
+    zoneamento = Column(Integer)          # Zoneamento
     
     # Critérios Comerciais (40%)
-    localizacao = Column(Integer)
-    estimativa_vgv = Column(Integer)
-    demanda_concorrencia = Column(Integer)
-    adequacao_produto = Column(Integer)
+    localizacao = Column(Integer)         # Localização
+    estimativa_vgv = Column(Integer)      # Estimativa de VGV
+    demanda_concorrencia = Column(Integer) # Demanda e Concorrência
+    adequacao_produto = Column(Integer)   # Adequação do Produto
     
     # Resultado Final
-    score = Column(Integer)
-    selo = Column(String)
+    score = Column(Integer)                # Pontuação final
+    selo = Column(String)                  # Selo de Qualidade (SQI A, B, C, D)
