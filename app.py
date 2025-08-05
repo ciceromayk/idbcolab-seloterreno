@@ -3,6 +3,8 @@ from db import SessionLocal, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 import pandas as pd
+import textwrap
+
 
 # >>>>>>> ADICIONE ESTA LINHA PARA MODO LARGO <<<<<<<
 st.set_page_config(layout="wide")
@@ -235,7 +237,7 @@ if st.session_state['pagina'] == 'novo':
 
         perc = min(int(float(total)/100*100), 100)
 
-        resumo_html = f"""
+        resumo_html = textwrap.dedent(f"""
         <div class="resumo-avaliacao-box">
           <div class="resumo-grid">
 
