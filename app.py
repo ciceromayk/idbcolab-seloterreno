@@ -100,12 +100,8 @@ if opcao == "Novo Terreno":
             "Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais"
         )
 
-    # Alinhamento com o Produto (10%) - colapsável
-    with st.expander("ALINHAMENTO COM O PRODUTO (10%)", expanded=True):
-        st.markdown("<p style='font-weight: bold;'>Alinhamento com o Produto</p>", unsafe_allow_html=True)
-        adequacao_produto_alt = st.slider(
-            "Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_alinhamento"
-        )
+    # Agora, removemos o macro "Alinhamento com o Produto ",
+    # e colocamos a "Adequação do Produto" como subitem dos critérios comerciais, como feito acima.
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
@@ -113,7 +109,7 @@ if opcao == "Novo Terreno":
                 doc_regular, ausencia_onus, potencial_aprovacao,
                 area_dimensoes, topografia, infraestrutura, zoneamento,
                 localizacao, estimativa_vgv, demanda_concorrencia,
-                adequacao_produto_alt
+                adequacao_produto
             )
             selo = definir_selo(total)
 
@@ -130,7 +126,7 @@ if opcao == "Novo Terreno":
                 localizacao=localizacao,
                 estimativa_vgv=estimativa_vgv,
                 demanda_concorrencia=demanda_concorrencia,
-                adequacao_produto=adequacao_produto_alt,
+                adequacao_produto=adequacao_produto,
                 score=total,
                 selo=selo
             )
