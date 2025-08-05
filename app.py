@@ -222,57 +222,55 @@ if st.session_state['pagina'] == 'novo':
         finally:
             session.close()
 
-        texto_selo = definir_selo(total)
-        if "(" in texto_selo:
-            letra, _ = texto_selo.split(" ",1)
-        else:
-            letra = texto_selo
-        letra_selo = letra
-        selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>" if total < 60 else f"<div class='selo-categoria'>SELO {letra_selo} SQI</div>"
-        titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
-        perc = min(int(float(total)/100*100), 100)
+        # ... resto do código (commit no banco etc) ...
+texto_selo = definir_selo(total)
+letra_selo = texto_selo[0]  # Usa somente A, B, C, D...
+selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
+titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
+perc = min(int(float(total)/100*100), 100)
 
-        resumo_html = f"""{titulo_html}
-        <div class="resumo-avaliacao-box">
-        <div class="resumo-grid">
-        <div class="resumo-col">
-        <span class="icon">⚖️</span>
-        <h4>JURÍDICO</h4>
-        <div class="valor-card">{juridico_total}%</div>
-        <div class="valor-pequeno">até 20%</div>
-        </div>
-        <div class="resumo-col">
-        <span class="icon">🏗️</span>
-        <h4>FÍSICO</h4>
-        <div class="valor-card">{fisico_total}%</div>
-        <div class="valor-pequeno">até 30%</div>
-        </div>
-        <div class="resumo-col">
-        <span class="icon">💰</span>
-        <h4>COMERCIAL</h4>
-        <div class="valor-card">{comercial_total}%</div>
-        <div class="valor-pequeno">até 50%</div>
-        </div>
-        <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
-        <span class="icon">🏆</span>
-        <h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
-        <div class="valor-card sqi">{total}%</div>
-        {selo_html}
-        <div class="selo-label"></div>
-        </div>
-        </div>
-        <div class="progress-bar-bg" style="margin-bottom:2px;">
-        <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
-        </div>
-        <div class="classificacao-legenda" style="margin-top:6px;">
-        <span>D (Regular)</span>
-        <span>C (Médio)</span>
-        <span>B (Bom)</span>
-        <span>A (Excelente)</span>
-        </div>
-        </div>"""
+resumo_html = f"""{titulo_html}
+<div class="resumo-avaliacao-box">
+<div class="resumo-grid">
+<div class="resumo-col">
+<span class="icon">⚖️</span>
+<h4>JURÍDICO</h4>
+<div class="valor-card">{juridico_total}%</div>
+<div class="valor-pequeno">até 20%</div>
+</div>
+<div class="resumo-col">
+<span class="icon">🏗️</span>
+<h4>FÍSICO</h4>
+<div class="valor-card">{fisico_total}%</div>
+<div class="valor-pequeno">até 30%</div>
+</div>
+<div class="resumo-col">
+<span class="icon">💰</span>
+<h4>COMERCIAL</h4>
+<div class="valor-card">{comercial_total}%</div>
+<div class="valor-pequeno">até 50%</div>
+</div>
+<div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+<span class="icon">🏆</span>
+<h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
+<div class="valor-card sqi">{total}%</div>
+{selo_html}
+<div class="selo-label"></div>
+</div>
+</div>
+<div class="progress-bar-bg" style="margin-bottom:2px;">
+<div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+</div>
+<div class="classificacao-legenda" style="margin-top:6px;">
+<span>D (Regular)</span>
+<span>C (Médio)</span>
+<span>B (Bom)</span>
+<span>A (Excelente)</span>
+</div>
+</div>"""
 
-        st.markdown(resumo_html, unsafe_allow_html=True)
+st.markdown(resumo_html, unsafe_allow_html=True)
+
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
