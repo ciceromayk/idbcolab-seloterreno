@@ -161,4 +161,143 @@ if st.session_state['pagina'] == 'novo':
         with col3:
             potencial_aprovacao = st.slider("Potencial de Aprovação (0 a 10)", 0, 10, 6)
 
-    with st.expander("CRITÉRIOS
+    with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=False):
+        st.markdown("<p style='font-weight: bold;'>Critérios Físicos</p>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            area_dimensoes = st.slider("Área e Dimensões (0 a 10)", 0, 10, 7)
+            topografia = st.slider("Topografia (0 a 5)", 0, 5, 3)
+        with col2:
+            infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
+            zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
+
+    with st.expander("CRITÉRIOS COMERCIAIS (50%)", expanded=False):
+        st.markdown(
+            "<h4 style='font-weight:bold; text-align:center;'>Critérios Comerciais</h4>",
+            unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            localizacao = st.slider("Localização (0 a 15)", 0, 15, 10)
+            estimativa_vgv = st.slider("Estimativa de VGV (0 a 15)", 0, 15, 10)
+        with col2:
+            demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
+            adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
+
+    if st.button("Avaliar Terreno"):
+        juridico_total  = doc_regular + ausencia_onus + potencial_aprovacao
+        fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
+        comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
+        total = juridico_total + fisico_total + comercial_total
+        selo = definir_selo(total)  # Deve retornar algo tipo "A (Excelente)" ou só "A"
+
+        session = SessionLocal()
+        try:
+            novo_terreno = Terreno(
+                descricao_terreno=descricao_terreno,
+                endereco=endereco,
+                bairro=bairro,
+                area_terreno=area_terreno,
+                altura_maxima=altura_maxima,
+                lencol_freatico_perm=lencol_perm,
+                nivel_lencol=nivel_lencol,
+                permite_outorga=permite_outorga,
+                responsavel_avaliacao=responsavel_avaliacao,
+                doc_regular=doc_regular,
+                ausencia_onus=ausencia_onus,
+                potencial_aprovacao=potencial_aprovacao,
+                area_dimensoes=area_dimensoes,
+                topografia=topografia,
+                infraestrutura=infraestrutura,
+                zoneamento=zoneamento,
+                localizacao=localizacao,
+                estimativa_vgv=estimativa_vgv,
+                demanda_concorrencia=demanda_concorrencia,
+                adequacao_produto=adequacao_produto,
+                score=total,
+                selo=selo
+            )
+            session.add(novo_terreno)
+            session.commit()
+        finally:
+            session.close()
+
+        texto_selo = definir_selo(total)
+        letra_selo = texto_selo[0]  # Certo: só "A", "B"...
+        selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
+        titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
+        perc = min(int(float(total)), 100)
+
+        resumo_html = f"""{titulo_html}
+<div class="resumo-avaliacao-box">
+    <div class="resumo-grid">
+        <div class="resumo-col">
+            <span class="icon">⚖️</span>
+            <h4>JURÍDICO</h4>
+            <div class="valor-card">{juridico_total}%</div>
+            <div class="valor-pequeno">até 20%</div>
+        </div>
+        <div class="resumo-col">
+            <span class="icon">🏗️</span>
+            <h4>FÍSICO</h4>
+            <div class="valor-card">{fisico_total}%</div>
+            <div class="valor-pequeno">até 30%</div>
+        </div>
+        <div class="resumo-col">
+            <span class="icon">💰</span>
+            <h4>COMERCIAL</h4>
+            <div class="valor-card">{comercial_total}%</div>
+            <div class="valor-pequeno">até 50%</div>
+        </div>
+        <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+            <span class="icon">🏆</span>
+            <h4 style="color:#15388a">PONTUAÇÃO SQI</h4>
+            <div class="valor-card sqi">{total}%</div>
+            {selo_html}
+            <div class="selo-label"></div>
+        </div>
+    </div>
+    <div class="progress-bar-bg" style="margin-bottom:2px;">
+        <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+    </div>
+    <div class="classificacao-legenda" style="margin-top:6px;">
+        <span>D (Regular)</span>
+        <span>C (Médio)</span>
+        <span>B (Bom)</span>
+        <span>A (Excelente)</span>
+    </div>
+</div>
+"""
+        st.markdown(resumo_html, unsafe_allow_html=True)
+
+# ==================== HISTÓRICO ==========================
+elif st.session_state['pagina'] == 'historico':
+    st.title("Histórico de Terrenos Avaliados")
+    session = SessionLocal()
+    try:
+        terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
+        if terrenos:
+            selos_disponiveis = list(set([t.selo for t in terrenos]))
+            filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
+
+            dados = []
+            for t in terrenos:
+                if filtro_selo == "Todos" or t.selo == filtro_selo:
+                    dados.append({
+                        "Data": t.data_avaliacao.strftime('%d-%m-%Y'),
+                        "Endereço": t.endereco,
+                        "Bairro": t.bairro if hasattr(t, "bairro") else "",
+                        "Jurídico": t.doc_regular + t.ausencia_onus + t.potencial_aprovacao,
+                        "Físico": t.area_dimensoes + t.topografia + t.infraestrutura + t.zoneamento,
+                        "Comercial": t.localizacao + t.estimativa_vgv + t.demanda_concorrencia + t.adequacao_produto,
+                        "Score (%)": t.score,
+                        "Selo": t.selo
+                    })
+            if dados:
+                df = pd.DataFrame(dados)
+                st.dataframe(df, use_container_width=True)
+            else:
+                st.write("Nenhuma avaliação cadastrada ainda para este filtro.")
+        else:
+            st.write("Nenhuma avaliação cadastrada ainda.")
+    finally:
+        session.close()
