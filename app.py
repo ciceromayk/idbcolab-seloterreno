@@ -123,12 +123,12 @@ if st.session_state['pagina'] == 'novo':
 
             juridico_perc = (juridico_total / 20) * 100
             fisico_perc = (fisico_total / 30) * 100
-            comercial_perc = (comercial_total / 40) * 100  # ajustado para 40
+            comercial_perc = (comercial_total / 40) * 100
 
             # Definir selo
             selo = definir_selo(total)
 
-            # Salvar avaliação
+            # Salvar
             novo_terreno = Terreno(
                 doc_regular=doc_regular,
                 ausencia_onus=ausencia_onus,
@@ -156,13 +156,16 @@ if st.session_state['pagina'] == 'novo':
             session.add(novo_terreno)
             session.commit()
 
-            # Gerar gráfico radar com labels
+            # Mostrar avaliação, selo e nota
+            st.write(f"**Avaliação do Terreno:** {total}%")
+            st.write(f"**Selo:** {selo} - Nota: {total}")
+
+            # Gráfico radar com labels
             categorias = ['Jurídicos', 'Físicos', 'Comerciais']
             valores = [juridico_perc, fisico_perc, comercial_perc]
-            valores_fechar = valores + [valores[0]]  # fecha o radar
+            valores_fechar = valores + [valores[0]]
 
             labels = [f"{cat}: {valor:.1f}%" for cat, valor in zip(categorias, valores)]
-
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
                 r=valores_fechar,
@@ -175,10 +178,7 @@ if st.session_state['pagina'] == 'novo':
             ))
             fig.update_layout(
                 polar=dict(
-                    radialaxis=dict(
-                        visible=True,
-                        range=[0, 100]
-                    )
+                    radialaxis=dict(visible=True, range=[0,100])
                 ),
                 showlegend=False
             )
@@ -191,7 +191,6 @@ elif st.session_state['pagina'] == 'historico':
     if terrenos:
         selos_disponiveis = list(set([t.selo for t in terrenos]))
         filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
-
         dados = []
         for t in terrenos:
             if filtro_selo == "Todos" or t.selo == filtro_selo:
