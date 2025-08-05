@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 from db import SessionLocal, init_db
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
@@ -33,21 +32,6 @@ if opcao == "Novo Terreno":
     with st.expander("DADOS DO TERRENO", expanded=True):
         descricao = st.text_input("DESCRIÇÃO DO TERRENO").upper()
         endereco = st.text_input("ENDEREÇO")
-        if endereco:
-            st.markdown(f"[Ver no Google Street View](https://www.google.com/maps/search/?api=1&query={endereco})", unsafe_allow_html=True)
-        # Botão para capturar a imagem do Street View
-        if st.button("Capturar Street View", key="capture_street"):
-            API_KEY = "YOUR_API_KEY"  # Substitua pela sua chave do Google API
-            street_url = f"https://maps.googleapis.com/maps/api/streetview?size=600x300&location={endereco}&key={API_KEY}"
-            response = requests.get(street_url)
-            if response.status_code == 200:
-                street_view_img = response.content
-                st.image(street_view_img, caption="Imagem de Street View Capturada")
-            else:
-                street_view_img = None
-                st.error("Falha ao capturar a imagem do Street View")
-        else:
-            street_view_img = None
         area_terreno = st.number_input("ÁREA DO TERRENO (m²)", min_value=0.0, value=0.0, step=1.0, format="%.2f")
         altura_maxima = st.number_input("ALTURA MÁXIMA A CONSTRUIR EM METROS (m)", min_value=0.0, value=0.0, step=0.1, format="%.2f")
         lenol_freatico_permite = st.radio("LENÇOL FREÁTICO PERMITE SUBSOLO", options=["Sim", "Não"])
@@ -92,14 +76,13 @@ if opcao == "Novo Terreno":
                 adequacao_produto
             )
             selo = definir_selo(total)
-            
+
             st.success(f"Terreno avaliado com {total}% - {selo}")
-            
+
             novo_terreno = Terreno(
                 # Dados do Terreno
                 descricao=descricao,
                 endereco=endereco,
-                street_view_img=street_view_img,
                 area_terreno=area_terreno,
                 altura_maxima=altura_maxima,
                 lenol_freatico_permite_subsolo=True if lenol_freatico_permite == "Sim" else False,
@@ -126,7 +109,7 @@ if opcao == "Novo Terreno":
             session.commit()
             st.info("Avaliação salva com sucesso!")
 
-elif opcao == "Histórico de Terrenos Avaliados":
+elif opcao == "Histórico de Avaliações":
     st.title("Histórico de Terrenos Avaliados")
     terrenos = session.query(Terreno).all()
     if terrenos:
