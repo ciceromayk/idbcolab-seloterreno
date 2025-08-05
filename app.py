@@ -308,3 +308,4 @@ elif st.session_state['pagina'] == 'historico':
             st.write("Nenhuma avaliação cadastrada ainda.")
     finally:
         session.close()
+
