@@ -101,7 +101,7 @@ css_personalizado = """
     .resumo-grid{ grid-template-columns: 1fr; gap:16px;}
 }
 .streamlit-expanderHeader {
-    font-size: 1.375rem !important;
+    font-size: 1.375rem !important;  /* 2pt maior */
     font-weight: bold !important;
 }
 </style>
@@ -282,29 +282,45 @@ if st.session_state['pagina'] == 'novo':
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
-    st.title("Histórico de Terrenos Avaliados")
+    st.title("HISTÓRICO DE TERRENOS AVALIADOS")  # CAIXA ALTA
+
     session = SessionLocal()
     try:
         terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
         if terrenos:
-            selos_disponiveis = list(set([t.selo for t in terrenos]))
-            filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
+            # Monta lista de selos disponíveis
+            selos_disponiveis = sorted(list(set([t.selo for t in terrenos])))
+            col_filtros = st.columns([1, 2])
+            with col_filtros[0]:
+                filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis, key="filtro_selo")
+            with col_filtros[1]:
+                filtro_nome = st.text_input("Filtrar por Nome do Terreno", "", key="filtro_nome").strip().upper()
 
             dados = []
             for t in terrenos:
-                if filtro_selo == "Todos" or t.selo == filtro_selo:
+                # Filtro pelo selo
+                passa_selo = filtro_selo == "Todos" or t.selo == filtro_selo
+                # Filtro pelo nome do terreno (busca substring)
+                passa_nome = filtro_nome in (t.descricao_terreno or "").upper()
+                if passa_selo and passa_nome:
                     dados.append({
-                        "Data": t.data_avaliacao.strftime('%d-%m-%Y'),
-                        "Endereço": t.endereco,
+                        "Nome do Terreno": t.descricao_terreno,
                         "Bairro": t.bairro if hasattr(t, "bairro") else "",
+                        "Área do Terreno (m²)": t.area_terreno if hasattr(t, "area_terreno") else "",
+                        "Altura Máxima (m)": t.altura_maxima if hasattr(t, "altura_maxima") else "",
                         "Jurídico": t.doc_regular + t.ausencia_onus + t.potencial_aprovacao,
                         "Físico": t.area_dimensoes + t.topografia + t.infraestrutura + t.zoneamento,
                         "Comercial": t.localizacao + t.estimativa_vgv + t.demanda_concorrencia + t.adequacao_produto,
                         "Score (%)": t.score,
-                        "Selo": t.selo
+                        "Selo": t.selo,
+                        "Data": t.data_avaliacao.strftime('%d-%m-%Y'),
                     })
             if dados:
-                df = pd.DataFrame(dados)
+                cols_ordem = [
+                    "Nome do Terreno", "Bairro", "Área do Terreno (m²)", "Altura Máxima (m)",
+                    "Jurídico", "Físico", "Comercial", "Score (%)", "Selo", "Data"
+                ]
+                df = pd.DataFrame(dados)[cols_ordem]
                 st.dataframe(df, use_container_width=True)
             else:
                 st.write("Nenhuma avaliação cadastrada ainda para este filtro.")
