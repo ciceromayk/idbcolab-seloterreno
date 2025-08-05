@@ -61,12 +61,16 @@ if opcao == "Novo Terreno":
             demanda_concorrencia = st.slider("Demanda e Concorrência (0 a 10)", 0, 10, 5)
         # Subitem: Adequação do Produto
         st.markdown("**Adequação do Produto (0 a 10)**")
-        adequacao_produto = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
+        adequacao_produto = st.slider(
+            "Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_comerciais"
+        )
 
     # Alinhamento com o Produto (10%) - colapsável
     with st.expander("ALINHAMENTO COM O PRODUTO (10%)", expanded=True):
         st.markdown("<p style='font-weight: bold;'>Alinhamento com o Produto</p>", unsafe_allow_html=True)
-        adequacao_produto_alt = st.slider("Adequação do Produto (0 a 10)", 0, 10, 7)
+        adequacao_produto_alt = st.slider(
+            "Adequação do Produto (0 a 10)", 0, 10, 7, key="adequacao_alinhamento"
+        )
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
