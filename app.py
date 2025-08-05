@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.graph_objects as go
 from db import SessionLocal, init_db, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
@@ -17,19 +18,18 @@ local_css("assets/custom.css")
 init_db()
 session = SessionLocal()
 
-# Sidebar com logotipo e título
+# Sidebar
 st.sidebar.image(
     "https://raw.githubusercontent.com/ciceromayk/idbcolab-referencia/main/LOGO%20IDBCOLAB.png",
     use_container_width=True
 )
-st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")  # Título sidebar
+st.sidebar.markdown("## IDIBRA PARTICIPAÇÕES")
 st.sidebar.header("Menu")
 
-# Botões para navegação com largura completa
+# Botões de navegação com largura total
 novo_button = st.sidebar.button("Novo Terreno", use_container_width=True)
 historico_button = st.sidebar.button("Histórico", use_container_width=True)
 
-# Controlar a página a ser exibida
 if novo_button:
     st.session_state['pagina'] = 'novo'
 if historico_button:
@@ -38,6 +38,7 @@ if historico_button:
 if 'pagina' not in st.session_state:
     st.session_state['pagina'] = 'inicio'
 
+# Limpar banco
 st.sidebar.markdown("---")
 senha_input = st.sidebar.text_input("Digite a senha para limpar o banco", type="password", key="senha_banco")
 botao_limpar = st.sidebar.button("Limpar Banco de Dados", use_container_width=True)
@@ -51,11 +52,9 @@ if botao_limpar:
 
 # Página de Novo Terreno
 if st.session_state['pagina'] == 'novo':
-    st.title("CADASTRO E AVALIAÇÃO DE TERRENO")  # upper case
-
+    st.title("CADASTRO E AVALIAÇÃO DE TERRENO")
     st.write("Preencha os dados do terreno conforme os critérios abaixo:")
 
-    # Macro item: DADOS DO TERRENO (inicia colapsado)
     with st.expander("DADOS DO TERRENO", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Nome do terreno</p>", unsafe_allow_html=True)
         descricao_terreno = st.text_input("Nome do terreno", max_chars=100, key="descricao_terreno").upper()
@@ -74,7 +73,7 @@ if st.session_state['pagina'] == 'novo':
         # Outorga
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
         
-        # Responsável pela avaliação
+        # Responsável
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
     # Critérios Jurídicos (20%)
@@ -88,7 +87,7 @@ if st.session_state['pagina'] == 'novo':
         with col3:
             potencial_aprovacao = st.slider("Potencial de Aprovação (0 a 10)", 0, 10, 6)
 
-    # Critérios Físicos (30%)
+    # Critérios físicos (30%)
     with st.expander("CRITÉRIOS FÍSICOS (30%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Físicos</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -99,7 +98,7 @@ if st.session_state['pagina'] == 'novo':
             infraestrutura = st.slider("Infraestrutura Existente (0 a 5)", 0, 5, 3)
             zoneamento = st.slider("Zoneamento (0 a 10)", 0, 10, 7)
 
-    # Critérios Comerciais (40%) com subitem "Adequação do Produto"
+    # Critérios comerciais (40%) com subitem "Adequação do Produto"
     with st.expander("CRITÉRIOS COMERCIAIS (40%)", expanded=False):
         st.markdown("<p style='font-weight: bold;'>Critérios Comerciais</p>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -113,14 +112,28 @@ if st.session_state['pagina'] == 'novo':
 
     if st.button("Avaliar Terreno"):
         with st.spinner("Processando avaliação..."):
+            # Cálculo score
             total = calcular_pontuacao(
                 doc_regular, ausencia_onus, potencial_aprovacao,
                 area_dimensoes, topografia, infraestrutura, zoneamento,
                 localizacao, estimativa_vgv, demanda_concorrencia,
                 adequacao_produto
             )
+
+            # Cálculo dos percentuais
+            juridico_total = doc_regular + ausencia_onus + potencial_aprovacao
+            juridico_perc = (juridico_total / 20) * 100
+
+            fisico_total = area_dimensoes + topografia + infraestrutura + zoneamento
+            fisico_perc = (fisico_total / 30) * 100
+
+            comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
+            comercial_perc = (comercial_total / 50) * 100
+
+            # Definir selo
             selo = definir_selo(total)
-            st.success(f"Terreno avaliado com {total}% - {selo}")
+
+            # Salvar no banco
             novo_terreno = Terreno(
                 doc_regular=doc_regular,
                 ausencia_onus=ausencia_onus,
@@ -147,17 +160,39 @@ if st.session_state['pagina'] == 'novo':
             )
             session.add(novo_terreno)
             session.commit()
-            st.info("Avaliação salva com sucesso!")
+            st.success(f"Terreno avaliado com {total}% - {selo}")
 
-# --- Histórico em tabela ordenada do maior para o menor score ---
+            # Geração do gráfico radar
+            categorias = ['Comerciais', 'Jurídicos', 'Físicos']
+            valores = [comercial_perc, juridico_perc, fisico_perc]
+            valores.append(valores[0])  # fecha o radar
 
+            fig = go.Figure()
+            fig.add_trace(go.Scatterpolar(
+                r=valores,
+                theta=categorias + [categorias[0]],
+                fill='toself',
+                name='Percentual'
+            ))
+            fig.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 100]
+                    )
+                ),
+                showlegend=False
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+# PÁGINA DE HISTÓRICO
 elif st.session_state['pagina'] == 'historico':
     st.title("Histórico de Terrenos Avaliados")
     terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
     if terrenos:
         selos_disponiveis = list(set([t.selo for t in terrenos]))
         filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
-        
+
         dados = []
         for t in terrenos:
             if filtro_selo == "Todos" or t.selo == filtro_selo:
@@ -165,7 +200,7 @@ elif st.session_state['pagina'] == 'historico':
                     "ID": t.id,
                     "Data": t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S'),
                     "Nome do Terreno": t.descricao_terreno,
-                    "Bairro": t.bairro if hasattr(t, "bairro") else "",  # caso banco antigo
+                    "Bairro": t.bairro if hasattr(t, "bairro") else "",
                     "Endereço": t.endereco,
                     "Área (m²)": t.area_terreno,
                     "Responsável": t.responsavel_avaliacao,
