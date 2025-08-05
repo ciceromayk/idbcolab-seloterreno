@@ -2,6 +2,7 @@ import streamlit as st
 from db import SessionLocal, init_db, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
+import pandas as pd
 
 # Configuração da página
 st.set_page_config(page_title="IDBCOLAB - COMITÊ DE PRODUTO", layout="wide")
@@ -145,27 +146,32 @@ if st.session_state['pagina'] == 'novo':
             session.commit()
             st.info("Avaliação salva com sucesso!")
 
-# Página de Histórico
+# --- MELHORIA: Histórico em tabela ordenada do maior para o menor score ---
+
 elif st.session_state['pagina'] == 'historico':
     st.title("Histórico de Terrenos Avaliados")
-    terrenos = session.query(Terreno).all()
+    terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
     if terrenos:
         selos_disponiveis = list(set([t.selo for t in terrenos]))
         filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
+        
+        dados = []
         for t in terrenos:
             if filtro_selo == "Todos" or t.selo == filtro_selo:
-                st.markdown(
-                    f"<div class='card'>"
-                    f"<p><strong>ID:</strong> {t.id}</p>"
-                    f"<p><strong>Data:</strong> {t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S')}</p>"
-                    f"<p><strong>Descrição:</strong> {t.descricao_terreno}</p>"
-                    f"<p><strong>Endereço:</strong> {t.endereco}</p>"
-                    f"<p><strong>Área:</strong> {t.area_terreno} m²</p>"
-                    f"<p><strong>Responsável:</strong> {t.responsavel_avaliacao}</p>"
-                    f"<p><strong>Score:</strong> {t.score}%</p>"
-                    f"<p><strong>Selo:</strong> {t.selo}</p>"
-                    "</div>",
-                    unsafe_allow_html=True
-                )
+                dados.append({
+                    "ID": t.id,
+                    "Data": t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S'),
+                    "Descrição": t.descricao_terreno,
+                    "Endereço": t.endereco,
+                    "Área (m²)": t.area_terreno,
+                    "Responsável": t.responsavel_avaliacao,
+                    "Score (%)": t.score,
+                    "Selo": t.selo
+                })
+        if dados:
+            df = pd.DataFrame(dados)
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.write("Nenhuma avaliação cadastrada ainda para este filtro.")
     else:
         st.write("Nenhuma avaliação cadastrada ainda.")
