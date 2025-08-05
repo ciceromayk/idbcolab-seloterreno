@@ -238,51 +238,52 @@ if st.session_state['pagina'] == 'novo':
         perc = min(int(float(total)/100*100), 100)
 
         resumo_html = textwrap.dedent(f"""
-        <div class="resumo-avaliacao-box">
-          <div class="resumo-grid">
+<div class="resumo-avaliacao-box">
+  <div class="resumo-grid">
 
-            <div class="resumo-col">
-              <span class="icon">⚖️</span>
-              <h4>JURÍDICO</h4>
-              <div class="valor-card">{juridico_total}%</div>
-              <div class="valor-pequeno">até 20%</div>
-            </div>
+    <div class="resumo-col">
+      <span class="icon">⚖️</span>
+      <h4>JURÍDICO</h4>
+      <div class="valor-card">{juridico_total}%</div>
+      <div class="valor-pequeno">até 20%</div>
+    </div>
 
-            <div class="resumo-col">
-              <span class="icon">🏗️</span>
-              <h4>FÍSICO</h4>
-              <div class="valor-card">{fisico_total}%</div>
-              <div class="valor-pequeno">até 30%</div>
-            </div>
+    <div class="resumo-col">
+      <span class="icon">🏗️</span>
+      <h4>FÍSICO</h4>
+      <div class="valor-card">{fisico_total}%</div>
+      <div class="valor-pequeno">até 30%</div>
+    </div>
 
-            <div class="resumo-col">
-              <span class="icon">🛒</span>
-              <h4>COMERCIAL</h4>
-              <div class="valor-card">{comercial_total}%</div>
-              <div class="valor-pequeno">até 50%</div>
-            </div>
+    <div class="resumo-col">
+      <span class="icon">🛒</span>
+      <h4>COMERCIAL</h4>
+      <div class="valor-card">{comercial_total}%</div>
+      <div class="valor-pequeno">até 50%</div>
+    </div>
 
-            <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
-              <span class="icon">🏆</span>
-              <h4 style="color:#15388a">Pontuação SQI</h4>
-              <div class="valor-card sqi">{total}%</div>
-              <div class="selo-categoria">SQI CATEGORIA {letra}</div>
-              <div class="selo-label"></div>
-            </div>
+    <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+      <span class="icon">🏆</span>
+      <h4 style="color:#15388a">Pontuação SQI</h4>
+      <div class="valor-card sqi">{total}%</div>
+      <div class="selo-categoria">SQI CATEGORIA {letra}</div>
+      <div class="selo-label"></div>
+    </div>
 
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
-          </div>
-          <div class="classificacao-legenda">
-            <span>E (Ruim)</span>
-            <span>D (Regular)</span>
-            <span>C (Médio)</span>
-            <span>B (Bom)</span>
-            <span>A (Excelente)</span>
-          </div>
-        </div>
-        """
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+  </div>
+  <div class="classificacao-legenda">
+    <span>E (Ruim)</span>
+    <span>D (Regular)</span>
+    <span>C (Médio)</span>
+    <span>B (Bom)</span>
+    <span>A (Excelente)</span>
+  </div>
+</div>
+""")
+        
         # >>>>>>> ESTE É O COMANDO CORRETO! <<<<<<<
         st.markdown(resumo_html, unsafe_allow_html=True)
 
