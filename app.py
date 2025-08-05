@@ -1,5 +1,5 @@
 import streamlit as st
-from db import SessionLocal, init_db
+from db import SessionLocal, init_db, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 
@@ -19,10 +19,27 @@ local_css("assets/custom.css")
 
 # Inicializa o banco de dados
 init_db()
-session = SessionLocal()
 
+# Sidebar
 st.sidebar.header("Menu")
 opcao = st.sidebar.selectbox("Selecione a opção", ["Novo Terreno", "Histórico de Avaliações"])
+
+# Botão para limpar banco com autenticação
+st.sidebar.markdown("---")
+senha_input = st.sidebar.text_input("Digite a senha para limpar o banco", type="password", key="senha_banco")
+botao_limpar = st.sidebar.button("Limpar Banco de Dados")
+
+if botao_limpar:
+    if senha_input == "123456":
+        # Limpa o banco: drop e recria as tabelas
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        st.success("Banco de dados limpo com sucesso!")
+    else:
+        st.error("Senha incorreta. Acesso negado.")
+
+# Fluxo principal
+session = SessionLocal()
 
 if opcao == "Novo Terreno":
     st.title("Cadastro e Avaliação de Terreno")
@@ -35,17 +52,14 @@ if opcao == "Novo Terreno":
         endereco = st.text_input("Endereço", key="endereco")
         area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
         altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
-        
         # Lençol freático
         lençol_freatico_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lençol_freatico_perm")
         if lençol_freatico_perm == "Não":
             nivel_lençol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lençol")
         else:
             nivel_lençol = None
-
         # Outorga
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
-
         # Responsável pela avaliação
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
