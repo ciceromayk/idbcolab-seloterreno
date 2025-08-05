@@ -234,3 +234,4 @@ elif st.session_state['pagina'] == 'historico':
             st.dataframe(df, use_container_width=True)
     finally:
         session.close()
+        
