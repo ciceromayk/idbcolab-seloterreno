@@ -4,177 +4,101 @@ from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 import pandas as pd
 
-# CSS para os cards finais do resumo - DESIGN MELHORADO
+# CSS para os cards finais do resumo, igual à imagem
 css_estilo = """
 <style>
-/* Container principal do resumo */
-.resumo-main-container {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    border-radius: 20px;
-    padding: 40px 30px;
-    margin: 30px 0;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+/* Container geral do resumo */
+.resumo-avaliacao-box {
+    background: linear-gradient(100deg, #f8fafc 80%, #e9e0fa 100%);
+    border-radius: 22px;
+    box-shadow: 0 4px 32px 0 rgba(30,41,59,.07);
+    padding: 32px 26px 22px 26px;
+    margin: 32px 0 32px 0;
 }
-
-/* Título do resumo */
-.resumo-titulo {
-    text-align: center;
-    color: #2c3e50;
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 35px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-/* Container dos cards */
-.resumo-container {
+.resumo-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 25px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(4, minmax(155px, 1fr));
+    gap: 26px;
+    justify-content: center;
+    margin-bottom: 26px;
 }
-
-/* Cards individuais */
-.resumo-box {
+.resumo-col {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-    padding: 25px 15px;
-    text-align: center;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.resumo-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* Efeito de fundo nos cards */
-.resumo-box::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    transform: rotate(45deg);
-}
-
-/* Ícones dos cards */
-.card-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    opacity: 0.8;
-}
-
-.juridico-icon { color: #9b59b6; }
-.fisico-icon { color: #3498db; }
-.comercial-icon { color: #2ecc71; }
-.selo-icon { color: #f39c12; }
-
-/* Títulos dos cards */
-.resumo-box h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #34495e;
-    margin: 0 0 15px 0;
-    line-height: 1.3;
-}
-
-/* Valores grandes */
-.valor-grande {
-    font-size: 3rem;
-    font-weight: 800;
-    margin: 10px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Card do selo SQI especial */
-.resumo-box.selo-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.resumo-box.selo-card h3 {
-    color: white;
-}
-
-.resumo-box.selo-card .valor-grande {
-    background: white;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Selo categoria */
-.selo-categoria {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 15px 0 5px 0;
-    letter-spacing: 2px;
-}
-
-.selo-label {
-    font-size: 1.1rem;
-    font-weight: 500;
-    opacity: 0.9;
-    margin: 0;
-}
-
-/* Barra de progresso */
-.progress-container {
-    width: 100%;
-    height: 30px;
-    background: #ecf0f1;
-    border-radius: 15px;
-    overflow: hidden;
-    margin-top: 20px;
-    position: relative;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
-    transition: width 1s ease;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px #4a007166;
+    padding: 18px 10px 15px 10px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
-    padding-right: 15px;
-    color: white;
-    font-weight: 600;
-    font-size: 1.1rem;
+    position: relative;
+    min-height: 150px;
+    transition: box-shadow .2s;
+}
+.resumo-col:hover {
+    box-shadow: 0 6px 28px #4a007150;
+}
+.resumo-col .icon {
+    font-size: 2.1rem;
+    margin-bottom: 2px;
+    opacity: .8;
+}
+.resumo-col h4 {
+    font-weight: 700;
+    color: #5535aa;
+    font-size: 1.13rem;
+    margin-bottom: 6px;
+    letter-spacing: .5px;
+    text-align:center;
+}
+.valor-card {
+    font-size: 2.18rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 7px 0;
+    color: #f52b2b;
+}
+.valor-card.sqi, .selo-categoria { color: #1d5cf7; }
+.valor-pequeno { font-size: 0.98rem; color:#837aa7; font-weight: 400;}
+.selo-categoria {
+    font-size: 1.22rem;
+    font-weight: 800;
+    margin-top: 12px;
+    letter-spacing: 1.1px;
+}
+.selo-label {
+    font-size: 1.01rem;
+    color: #39205f;
+    margin-top:2px;
+    font-weight: 500;
+    opacity: 0.70;
+}
+/* Progress bar */
+.progress-bar-bg{
+    width:100%; background:#f3eded; border-radius:9px; height:26px; margin:15px 0 7px 0;
+}
+.progress-bar-inner{
+    background:linear-gradient(90deg,#74fabd 0%,#2376f8 100%);
+    height:26px; border-radius:9px;
+    text-align:right; color:#fff; font-weight:700; padding-right:13px;
+    font-size:1.13rem; transition:width .7s;
+    box-shadow: 0 2px 8px #42268e20;
+    display:flex; align-items:center; justify-content:flex-end;
 }
 
-/* Classificação do selo */
-.selo-classification {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: #7f8c8d;
+.classificacao-legenda{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.92rem;
+    color:#a386e7;
+    margin:0 12px 0 12px;
+    opacity:.85
 }
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .resumo-main-container {
-        padding: 25px 15px;
-    }
-    
-    .resumo-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .valor-grande {
-        font-size: 2.5rem;
-    }
+@media (max-width: 900px){
+    .resumo-grid{ grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+}
+@media (max-width: 600px){
+    .resumo-avaliacao-box{padding:10px 4px;}
+    .resumo-grid{ grid-template-columns: 1fr; gap:16px;}
 }
 </style>
 """
@@ -263,7 +187,7 @@ if st.session_state['pagina'] == 'novo':
         fisico_total    = area_dimensoes + topografia + infraestrutura + zoneamento
         comercial_total = localizacao + estimativa_vgv + demanda_concorrencia + adequacao_produto
         total = juridico_total + fisico_total + comercial_total
-        selo = definir_selo(total)
+        selo = definir_selo(total) # deve retornar 'B (Bom)' ou 'B'
 
         session = SessionLocal()
         try:
@@ -296,75 +220,63 @@ if st.session_state['pagina'] == 'novo':
         finally:
             session.close()
 
+        # --------- RESUMO VISUAL FINAL -------------
         # --------- RESUMO VISUAL FINAL MELHORADO -------------
-        st.markdown("---")
-        
-        # Processamento do selo
-        texto_selo = definir_selo(total)
-        if "(" in texto_selo:
-            letra, desc = texto_selo.split(" ",1)
-            desc = desc.replace("(","").replace(")","")
-        else:
-            letra, desc = texto_selo, ""
+st.markdown("---")
+st.subheader("RESUMO DA AVALIAÇÃO")
 
-        # Cálculo da porcentagem para a barra de progresso
-        porcentagem = (total / 100) * 100
+texto_selo = definir_selo(total)
+if "(" in texto_selo:
+    letra, desc = texto_selo.split(" ",1)
+    desc = desc.replace("(","").replace(")","")
+else:
+    letra, desc = texto_selo, ""
 
-        # HTML do resumo melhorado
-        resumo_html = f"""
-        <div class='resumo-main-container'>
-            <h2 class='resumo-titulo'>📊 Resumo da Avaliação</h2>
-            
-            <div class='resumo-container'>
-                <div class='resumo-box'>
-                    <div class='card-icon juridico-icon'>⚖️</div>
-                    <h3>Critérios<br>Jurídicos</h3>
-                    <div class='valor-grande'>{juridico_total}</div>
-                    <small style='color: #7f8c8d;'>de 20 pontos</small>
-                </div>
-                
-                <div class='resumo-box'>
-                    <div class='card-icon fisico-icon'>🏗️</div>
-                    <h3>Critérios<br>Físicos</h3>
-                    <div class='valor-grande'>{fisico_total}</div>
-                    <small style='color: #7f8c8d;'>de 30 pontos</small>
-                </div>
-                
-                <div class='resumo-box'>
-                    <div class='card-icon comercial-icon'>💼</div>
-                    <h3>Critérios<br>Comerciais</h3>
-                    <div class='valor-grande'>{comercial_total}</div>
-                    <small style='color: #7f8c8d;'>de 50 pontos</small>
-                </div>
-                
-                <div class='resumo-box selo-card'>
-                    <div class='card-icon selo-icon' style='color: white;'>🏆</div>
-                    <h3>Pontuação Total<br>SELO SQI</h3>
-                    <div class='valor-grande'>{total}</div>
-                    <div class='selo-categoria'>SELO {letra}</div>
-                    <p class='selo-label'>{desc}</p>
-                </div>
-            </div>
-            
-            <div class='progress-container'>
-                <div class='progress-bar' style='width: {porcentagem}%;'>
-                    {total}%
-                </div>
-            </div>
-            
-            <div class='selo-classification'>
-                <span>E (0-40) Ruim</span>
-                <span>D (41-55) Regular</span>
-                <span>C (56-70) Médio</span>
-                <span>B (71-85) Bom</span>
-                <span>A (86-100) Excelente</span>
-            </div>
-        </div>
-        """
-        st.markdown(resumo_html, unsafe_allow_html=True)
-        
-        # Mensagem de sucesso
-        st.success(f"✅ Terreno '{descricao_terreno}' avaliado com sucesso!")
+perc = min(int(float(total)/100*100), 100)
+
+resumo_html = f"""
+<div class="resumo-avaliacao-box">
+  <div class="resumo-grid">
+    <div class="resumo-col">
+      <span class="icon">⚖️</span>
+      <h4>Jurídico</h4>
+      <div class="valor-card">{juridico_total}</div>
+      <div class="valor-pequeno">até 20 pts</div>
+    </div>
+    <div class="resumo-col">
+      <span class="icon">🏗️</span>
+      <h4>Físico</h4>
+      <div class="valor-card">{fisico_total}</div>
+      <div class="valor-pequeno">até 30 pts</div>
+    </div>
+    <div class="resumo-col">
+      <span class="icon">💼</span>
+      <h4>Comercial</h4>
+      <div class="valor-card">{comercial_total}</div>
+      <div class="valor-pequeno">até 50 pts</div>
+    </div>
+    <div class="resumo-col" style="background:linear-gradient(120deg,#eaf6ff 80%,#dbe0ff 100%)">
+      <span class="icon">🏆</span>
+      <h4 style="color:#15388a">Pontos SQI</h4>
+      <div class="valor-card sqi">{total}</div>
+      <div class="selo-categoria">{letra}</div>
+      <div class="selo-label">{desc}</div>
+    </div>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-inner" style="width:{perc}%">{perc}%</div>
+  </div>
+  <div class="classificacao-legenda">
+    <span>E (Ruim)</span>
+    <span>D (Regular)</span>
+    <span>C (Médio)</span>
+    <span>B (Bom)</span>
+    <span>A (Excelente)</span>
+  </div>
+</div>
+"""
+st.markdown(resumo_html, unsafe_allow_html=True)
+
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
