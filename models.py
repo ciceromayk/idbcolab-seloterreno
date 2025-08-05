@@ -23,11 +23,11 @@ class Terreno(Base):
     score = Column(Integer)
     selo = Column(String, index=True)
     data_avaliacao = Column(DateTime, default=datetime.utcnow)
-    
-    # Novos campos adicionados
-    descricao_terreno = Column(String)
+
+    descricao_terreno = Column(String)             # nome do terreno
     endereco = Column(String)
-    area_terreno = Column(Float)  # Usando Float para permitir números decimais
+    bairro = Column(String)                        # NOVO CAMPO ADICIONADO
+    area_terreno = Column(Float)                   # Usando Float para permitir números decimais
     altura_maxima = Column(Float)
     lençol_freatico_perm = Column(String)
     nivel_lençol = Column(Float, nullable=True)
