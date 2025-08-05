@@ -4,6 +4,9 @@ from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 import pandas as pd
 
+# >>>>>>> ADICIONE ESTA LINHA PARA MODO LARGO <<<<<<<
+st.set_page_config(layout="wide")
+
 # -------- CSS NOVO para os cards finais do resumo --------
 css_estilo = """
 <style>
@@ -278,6 +281,7 @@ if st.session_state['pagina'] == 'novo':
           </div>
         </div>
         """
+        # >>>>>>> ESTE É O COMANDO CORRETO! <<<<<<<
         st.markdown(resumo_html, unsafe_allow_html=True)
 
 # ==================== HISTÓRICO ==========================
