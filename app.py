@@ -75,8 +75,6 @@ if botao_limpar:
 
 # Página de Novo Terreno
 if st.session_state['pagina'] == 'novo':
-    import plotly.graph_objects as go
-
     st.title("CADASTRO E AVALIAÇÃO DE TERRENO")
     st.write("Preencha os dados do terreno conforme os critérios abaixo:")
 
@@ -153,26 +151,32 @@ if st.session_state['pagina'] == 'novo':
             # Selo
             selo = definir_selo(total)
 
-            # Salvar avaliação
-            novo_terreno = Terreno(
-                # elementos de sua implementação...
-                # por exemplo:
-                # descricao_terreno=descricao_terreno,
-                # endereco=endereco,
-                # bairro=bairro,
-                # ... demais atributos ...
-                score=total,
-                selo=selo,
-                # ... outros atributos necessários ...
-            )
-            session.add(novo_terreno)
-            session.commit()
+            # Salvar avaliação no banco
+            session = SessionLocal()
+            try:
+                novo_terreno = Terreno(
+                    descricao_terreno=descricao_terreno,
+                    endereco=endereco,
+                    bairro=bairro,
+                    area_terreno=area_terreno,
+                    altura_maxima=altura_maxima,
+                    lençol_freatico_perm=lençol_freatico_perm,
+                    nivel_lençol=nivel_lençol,
+                    permite_outorga=permite_outorga,
+                    responsavel_avaliacao=responsavel_avaliacao,
+                    score=total,
+                    selo=selo
+                    # Adicione outros campos obrigatórios do seu modelo Terreno se necessário
+                )
+                session.add(novo_terreno)
+                session.commit()
+            finally:
+                session.close()
 
             # Exibir o resultado com estilo
             st.markdown("---")
             st.subheader("RESUMO DA AVALIAÇÃO")
 
-            # HTML estilizado
             resumo_html = f"""
             <div class='resumo-container'>
                 <div class='resumo-box'>
@@ -225,29 +229,33 @@ if st.session_state['pagina'] == 'novo':
 # Página de Histórico
 elif st.session_state['pagina'] == 'historico':
     st.title("Histórico de Terrenos Avaliados")
-    terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
-    if terrenos:
-        selos_disponiveis = list(set([t.selo for t in terrenos]))
-        filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
+    session = SessionLocal()
+    try:
+        terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
+        if terrenos:
+            selos_disponiveis = list(set([t.selo for t in terrenos]))
+            filtro_selo = st.selectbox("Filtrar por Selo", ["Todos"] + selos_disponiveis)
 
-        dados = []
-        for t in terrenos:
-            if filtro_selo == "Todos" or t.selo == filtro_selo:
-                dados.append({
-                    "ID": t.id,
-                    "Data": t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S'),
-                    "Nome do Terreno": t.descricao_terreno,
-                    "Bairro": t.bairro if hasattr(t, "bairro") else "",
-                    "Endereço": t.endereco,
-                    "Área (m²)": t.area_terreno,
-                    "Responsável": t.responsavel_avaliacao,
-                    "Score (%)": t.score,
-                    "Selo": t.selo
-                })
-        if dados:
-            df = pd.DataFrame(dados)
-            st.dataframe(df, use_container_width=True)
+            dados = []
+            for t in terrenos:
+                if filtro_selo == "Todos" or t.selo == filtro_selo:
+                    dados.append({
+                        "ID": t.id,
+                        "Data": t.data_avaliacao.strftime('%Y-%m-%d %H:%M:%S') if hasattr(t, 'data_avaliacao') else "",
+                        "Nome do Terreno": t.descricao_terreno,
+                        "Bairro": t.bairro if hasattr(t, "bairro") else "",
+                        "Endereço": t.endereco,
+                        "Área (m²)": t.area_terreno,
+                        "Responsável": t.responsavel_avaliacao,
+                        "Score (%)": t.score,
+                        "Selo": t.selo
+                    })
+            if dados:
+                df = pd.DataFrame(dados)
+                st.dataframe(df, use_container_width=True)
+            else:
+                st.write("Nenhuma avaliação cadastrada ainda para este filtro.")
         else:
-            st.write("Nenhuma avaliação cadastrada ainda para este filtro.")
-    else:
-        st.write("Nenhuma avaliação cadastrada ainda.")
+            st.write("Nenhuma avaliação cadastrada ainda.")
+    finally:
+        session.close()
