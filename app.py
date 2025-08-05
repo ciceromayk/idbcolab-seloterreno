@@ -22,7 +22,7 @@ init_db()
 session = SessionLocal()
 
 # Sidebar com logotipo e botões alinhados verticalmente
-st.sidebar.image("/workspaces/idbcolab-seloterreno/LOGO IDBCOLAB.png", use_column_width=True)
+st.sidebar.image("/workspaces/idbcolab-seloterreno/LOGO IDBCOLAB.png", use_container_width=True)
 st.sidebar.header("Menu")
 novo_button = st.sidebar.button("Novo Terreno")
 historico_button = st.sidebar.button("Histórico")
@@ -58,14 +58,17 @@ if st.session_state['pagina'] == 'novo':
         endereco = st.text_input("Endereço", key="endereco")
         area_terreno = st.number_input("Área do terreno (m²)", min_value=0.0, step=1.0, key="area_terreno")
         altura_maxima = st.number_input("Altura máxima a construir (metros)", min_value=0.0, step=0.1, key="altura_maxima")
+        
         # Lençol freático
         lençol_freatico_perm = st.radio("Lençol freático permite subsolo?", ("Sim", "Não"), key="lençol_freatico_perm")
         if lençol_freatico_perm == "Não":
             nivel_lençol = st.number_input("Nível do lençol freático (metros)", min_value=0.0, step=0.1, key="nivel_lençol")
         else:
             nivel_lençol = None
+        
         # Outorga
         permite_outorga = st.radio("Permite outorga?", ("Sim", "Não"), key="permite_outorga")
+        
         # Responsável pela avaliação
         responsavel_avaliacao = st.text_input("Responsável pela avaliação", key="responsavel_avaliacao")
 
