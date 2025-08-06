@@ -4,7 +4,9 @@ from db import SessionLocal, engine, Base
 from models import Terreno
 from utils import calcular_pontuacao, definir_selo
 
+# Configuração da página e criação do banco de dados (caso não exista)
 st.set_page_config(layout="wide")
+Base.metadata.create_all(bind=engine)
 
 css_personalizado = """
 <style>
@@ -108,7 +110,7 @@ css_personalizado = """
 """
 st.markdown(css_personalizado, unsafe_allow_html=True)
 
-# Sidebar, menu, manutenção do banco
+# Sidebar, menu e manutenção do banco
 st.sidebar.image(
     "https://raw.githubusercontent.com/ciceromayk/idbcolab-referencia/main/LOGO%20IDBCOLAB.png",
     use_container_width=True
@@ -233,7 +235,7 @@ if st.session_state['pagina'] == 'novo':
             session.close()
 
         texto_selo = definir_selo(total)
-        letra_selo = texto_selo[4]  # Certo: só "A", "B"...
+        letra_selo = texto_selo[4]  # Certo: só "A", "B", etc.
         selo_html = f"<div class='selo-categoria'>SELO {letra_selo}</div>"
         titulo_html = "<h3 style='font-weight:900; text-align:center; color:#183366; margin-bottom:28px;'>AVALIAÇÃO DO TERRENO</h3>"
         perc = min(int(float(total)), 100)
@@ -282,13 +284,13 @@ if st.session_state['pagina'] == 'novo':
 
 # ==================== HISTÓRICO ==========================
 elif st.session_state['pagina'] == 'historico':
-    st.title("HISTÓRICO DE TERRENOS AVALIADOS")  # CAIXA ALTA
+    st.title("HISTÓRICO DE TERRENOS AVALIADOS")  # Título em caixa alta
 
     session = SessionLocal()
     try:
         terrenos = session.query(Terreno).order_by(Terreno.score.desc()).all()
         if terrenos:
-            # Monta lista de selos disponíveis
+            # Lista dinâmica dos selos disponíveis
             selos_disponiveis = sorted(list(set([t.selo for t in terrenos])))
             col_filtros = st.columns([1, 2])
             with col_filtros[0]:
@@ -300,7 +302,7 @@ elif st.session_state['pagina'] == 'historico':
             for t in terrenos:
                 # Filtro pelo selo
                 passa_selo = filtro_selo == "Todos" or t.selo == filtro_selo
-                # Filtro pelo nome do terreno (busca substring)
+                # Filtro pelo nome do terreno (busca por substring, ignorando diferenças de maiúsculas/minúsculas)
                 passa_nome = filtro_nome in (t.descricao_terreno or "").upper()
                 if passa_selo and passa_nome:
                     dados.append({
